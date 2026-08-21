@@ -1,4 +1,4 @@
-const CACHE = 'flagwise-v21'
+const CACHE = 'flagwise-v22'
 const BASE = new URL('./', self.location).pathname
 const asset = path => `${BASE}${path}`
 self.addEventListener('install', event => event.waitUntil((async () => {
