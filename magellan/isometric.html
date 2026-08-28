@@ -1,13 +1,17 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/isometric-CzG8zJ5k.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/isometric-B4mvtZ4U.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/isometric-B7pYkocv.css">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/isometric-Cu2pPZ5h.css">
 </head>
   <body class="iso-page">
     <main class="iso-shell">
       <div id="iso-controls" class="iso-controls">
-        <label>View <select id="iso-rotation"><option value="0">South</option><option value="1">West</option><option value="2">North</option><option value="3">East</option></select></label>
+        <div class="rotation-control" role="group" aria-label="Map rotation">
+          <span>Up-left <output id="iso-bearing">West</output></span>
+          <button id="iso-rotate-left" type="button" class="secondary rotation-button" aria-label="Rotate map 90 degrees left" title="Rotate 90° left"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 11H3V6"/><path d="M4 10a13 13 0 1 1-1 11"/></svg></button>
+          <button id="iso-rotate-right" type="button" class="secondary rotation-button" aria-label="Rotate map 90 degrees right" title="Rotate 90° right"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M24 11h5V6"/><path d="M28 10a13 13 0 1 0 1 11"/></svg></button>
+        </div>
         <label class="check"><input id="iso-fill" type="checkbox" checked> Surface fill</label>
         <button id="iso-structure" type="button" class="secondary" aria-pressed="true">Hide grid</button>
         <button id="iso-save" type="button" class="secondary">Save map</button>
@@ -27,6 +31,9 @@
           </button>
           <button id="tool-plane" class="terrain-tool" type="button" aria-label="Plane tiles to a flat reference" aria-pressed="false" title="Plane tiles">
             <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 21l8-8h14l2 8zM10 21v5h14v-5M14 13V7h7v6"/><path d="M3 28h26"/></svg><span>Plane</span>
+          </button>
+          <button id="tool-cliff" class="terrain-tool" type="button" aria-label="Toggle cliff lines" aria-pressed="false" title="Edit cliff lines">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 9h11l4 5h11M3 23h9l6-9"/><path d="M14 9v7l-2 7M18 14v9h11"/></svg><span>Cliffs</span>
           </button>
           <span class="tool-divider" aria-hidden="true"></span>
           <button id="tool-raise" class="terrain-tool" type="button" aria-label="Raise selection" title="Raise selection" disabled>
