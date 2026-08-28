@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171b1f"><title>Magellan · Asset Foundry</title>  <script type="module" crossorigin src="/magellan/assets/assets-oCpHPj7K.js"></script>
+  <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/assets-DPxdcuJ9.css">
+</head>
+  <body class="asset-page">
+    <main class="asset-shell">
+      <header class="asset-header"><div><p class="eyebrow">Magellan production tools</p><h1>Asset foundry</h1></div><p>Every generation is archived with its prompt and parameters.</p></header>
+      <section class="generator-panel">
+        <p class="stage-label">Stage 1 · Find the reference</p>
+        <form id="asset-form">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt" name="prompt" maxlength="2000" required placeholder="A small 18th-century Caribbean sloop, top-down view, cream sails, dark wooden hull"></textarea>
+          <div class="asset-controls">
+            <label>Width <input id="width" type="number" min="16" max="256" step="4" value="64" required></label>
+            <label>Height <input id="height" type="number" min="16" max="256" step="4" value="64" required></label>
+            <button id="generate" type="submit">Generate candidate</button>
+          </div>
+        </form>
+        <p id="asset-status" class="asset-status" role="status"></p>
+      </section>
+      <section id="rotation-panel" class="generator-panel rotation-panel" hidden>
+        <p class="stage-label">Stage 2 · Build the rotation set</p>
+        <div class="reference-row"><img id="rotation-reference" alt="Selected rotation reference"><div><strong>Selected reference</strong><p id="rotation-source-label"></p></div></div>
+        <form id="rotation-form">
+          <label for="rotation-prompt">Object description</label>
+          <textarea id="rotation-prompt" maxlength="2000" required></textarea>
+          <div class="asset-controls">
+            <label>Camera view <select id="rotation-view"><option value="high top-down">High top-down</option><option value="low top-down">Low top-down</option><option value="side">Side</option></select></label>
+            <button id="cancel-rotation" class="secondary" type="button">Cancel</button>
+            <button id="rotate" type="submit">Generate 8 directions</button>
+          </div>
+          <p class="cost-warning">PixelLab estimates 20–40 generations and 2–4 minutes. Submission is explicit and cannot be cancelled here.</p>
+        </form>
+      </section>
+      <section><div class="gallery-heading"><h2>Experiment archive</h2><button id="refresh" class="secondary" type="button">Refresh</button></div><div id="gallery" class="asset-gallery"></div></section>
+    </main>
+  </body>
+</html>
