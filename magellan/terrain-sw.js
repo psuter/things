@@ -1,7 +1,7 @@
-const CACHE_NAME = "magellan-terrain-offline-v1";
+const CACHE_NAME = "magellan-terrain-offline-v2";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add("./isometric.html")).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.add("./")).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
@@ -24,7 +24,7 @@ self.addEventListener("fetch", (event) => {
   }).catch(async () => {
     const cached = await caches.match(request);
     if (cached) return cached;
-    if (request.mode === "navigate") return (await caches.match("./isometric.html")) ?? Response.error();
+    if (request.mode === "navigate") return (await caches.match("./")) ?? Response.error();
     return Response.error();
   }));
 });
