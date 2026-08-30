@@ -1,21 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171b1f"><title>Magellan · Asset Foundry</title>  <script type="module" crossorigin src="/magellan/assets/assets-oCpHPj7K.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171b1f"><title>Magellan · Asset Foundry</title>  <script type="module" crossorigin src="/magellan/assets/assets-BdEvQPAw.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/assets-DPxdcuJ9.css">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/assets-CWolWmL0.css">
 </head>
   <body class="asset-page">
     <main class="asset-shell">
       <header class="asset-header"><div><p class="eyebrow">Magellan production tools</p><h1>Asset foundry</h1></div><p>Every generation is archived with its prompt and parameters. <a href="./">Open terrain editor</a></p></header>
       <section class="generator-panel">
-        <p class="stage-label">Stage 1 · Find the reference</p>
+        <p class="stage-label">Stage 1 · Generate an experiment</p>
         <form id="asset-form">
           <label for="prompt">Prompt</label>
           <textarea id="prompt" name="prompt" maxlength="2000" required placeholder="A small 18th-century Caribbean sloop, top-down view, cream sails, dark wooden hull"></textarea>
           <div class="asset-controls">
+            <label>Generator <select id="generator"><option value="candidate">General sprite</option><option value="isometric">Isometric tile</option></select></label>
             <label>Width <input id="width" type="number" min="16" max="256" step="4" value="64" required></label>
             <label>Height <input id="height" type="number" min="16" max="256" step="4" value="64" required></label>
             <button id="generate" type="submit">Generate candidate</button>
+          </div>
+          <div id="tile-options" class="tile-options" hidden>
+            <label>Shape <select id="tile-shape"><option value="thin tile">Thin tile</option><option value="thick tile">Thick tile</option><option value="block">Block</option></select></label>
+            <label>Material <select id="tile-material"><option value="land">Land</option><option value="water">Water</option></select></label>
+            <fieldset><legend>Normalized corners · NW NE SE SW</legend><div class="corner-inputs"><input class="tile-corner" type="number" min="0" max="2" value="0" aria-label="North-west corner"><input class="tile-corner" type="number" min="0" max="2" value="0" aria-label="North-east corner"><input class="tile-corner" type="number" min="0" max="2" value="0" aria-label="South-east corner"><input class="tile-corner" type="number" min="0" max="2" value="0" aria-label="South-west corner"></div></fieldset>
+            <p>This configuration is saved with the experiment. Approve successful candidates below to add variants to the sprite bank.</p>
           </div>
         </form>
         <p id="asset-status" class="asset-status" role="status"></p>
@@ -34,6 +41,7 @@
           <p class="cost-warning">PixelLab estimates 20–40 generations and 2–4 minutes. Submission is explicit and cannot be cancelled here.</p>
         </form>
       </section>
+      <section class="bank-section"><div class="gallery-heading"><div><p class="stage-label">Approved assets</p><h2>Sprite bank</h2></div><span id="bank-summary"></span></div><div id="sprite-bank" class="sprite-bank"></div></section>
       <section><div class="gallery-heading"><h2>Experiment archive</h2><button id="refresh" class="secondary" type="button">Refresh</button></div><div id="gallery" class="asset-gallery"></div></section>
     </main>
   </body>

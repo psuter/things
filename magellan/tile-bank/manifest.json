@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "bindings": {
+    "water:0,0,0,0": [
+      {
+        "experimentId": "2026-08-29T13-05-04-499Z_c6cef490",
+        "image": "./tile-bank/2026-08-29T13-05-04-499Z_c6cef490.png",
+        "weight": 1
+      }
+    ],
+    "land:0,0,0,0": [
+      {
+        "experimentId": "2026-08-29T13-03-49-973Z_c9d14d29",
+        "image": "./tile-bank/2026-08-29T13-03-49-973Z_c9d14d29.png",
+        "weight": 1
+      }
+    ]
+  }
+}
