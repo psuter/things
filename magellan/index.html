@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-CiKI43HI.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-Dr48Wq_p.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-EMAn8amd.css">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-B3uW6vA2.css">
 </head>
   <body class="iso-page">
     <main class="iso-shell">
@@ -27,12 +27,17 @@
       <section class="iso-frame">
         <canvas id="iso-canvas" aria-label="Editable dimetric terrain"></canvas>
         <div class="terrain-tools" role="toolbar" aria-label="Terraforming tools">
-          <button id="tool-multi" class="terrain-tool" type="button" aria-label="Toggle multiple tile selection" aria-pressed="false" title="Select multiple tiles">
-            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 10l7-4 7 4-7 4zM15 18l7-4 7 4-7 4zM3 24l7-4 7 4-7 4z"/><path d="M22 5v7m-3-3h6"/></svg><span>Multi</span>
-          </button>
-          <button id="tool-lasso" class="terrain-tool" type="button" aria-label="Lasso nodes" aria-pressed="false" title="Lasso nodes">
-            <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M24 8c5 3 4 10-1 14-5 4-14 4-17-1-3-5 3-12 10-14 4-1 7-1 8 1z"/><path d="M23 22c0 4 2 6 5 5"/></svg><span>Lasso</span>
-          </button>
+          <div class="terrain-tool-group">
+            <button id="tool-select" class="terrain-tool" type="button" aria-label="Open selection tools" aria-expanded="false" aria-pressed="false" title="Selection tools">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 5l18 12-8 2-4 8z"/><path d="M18 21l6 6"/></svg><span>Select</span>
+            </button>
+            <div id="selection-tools" class="terrain-submenu selection-submenu" role="menu" aria-label="Selection tools" hidden>
+              <button id="tool-multi" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Paint tiles into or out of the selection"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 10l7-4 7 4-7 4zM15 18l7-4 7 4-7 4zM3 24l7-4 7 4-7 4z"/><path d="M22 5v7m-3-3h6"/></svg><span>Multi</span></button>
+              <button id="tool-lasso" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Lasso nodes"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M24 8c5 3 4 10-1 14-5 4-14 4-17-1-3-5 3-12 10-14 4-1 7-1 8 1z"/><path d="M23 22c0 4 2 6 5 5"/></svg><span>Lasso</span></button>
+              <button id="tool-flood" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Select contiguous flat tiles at one level"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 17l8-5 8 5-8 5zM12 12l8-5 8 5-8 5zM12 22l8-5 8 5-8 5z"/><path d="M4 26h24"/></svg><span>Flood</span></button>
+              <button id="tool-selection-clear" class="terrain-tool" type="button" role="menuitem" title="Clear the current selection"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 7l18 18M25 7L7 25"/><path d="M4 4h24v24H4z"/></svg><span>Clear</span></button>
+            </div>
+          </div>
           <button id="tool-plane" class="terrain-tool" type="button" aria-label="Plane tiles to a flat reference" aria-pressed="false" title="Plane tiles">
             <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 21l8-8h14l2 8zM10 21v5h14v-5M14 13V7h7v6"/><path d="M3 28h26"/></svg><span>Plane</span>
           </button>
@@ -54,7 +59,19 @@
           <button id="tool-lower" class="terrain-tool" type="button" aria-label="Lower selection" title="Lower selection" disabled><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 12l11-6 11 6-11 6z"/><path d="M16 16v11m-5-5 5 5 5-5"/></svg><span>Lower</span></button>
           <button id="tool-land" class="terrain-tool terrain-tool-material" type="button" aria-label="Turn selection to land" title="Turn selection to land" disabled><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 23c5-7 8-12 13-12s8 5 13 12z"/><path d="M8 23h16M12 18h8"/></svg><span>Land</span></button>
           <button id="tool-water" class="terrain-tool terrain-tool-material" type="button" aria-label="Turn selection to water" title="Turn selection to water" disabled><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 12c3 0 3 3 6 3s3-3 6-3 3 3 6 3 3-3 6-3M3 20c3 0 3 3 6 3s3-3 6-3 3 3 6 3 3-3 6-3"/></svg><span>Water</span></button>
+          <button id="tool-decor" class="terrain-tool" type="button" aria-label="Open tile decor picker" aria-pressed="false" title="Tile decor"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27V13M16 16c-4-5-8-6-12-4 4 1 7 3 9 7M16 15c3-6 7-8 12-7-4 2-7 5-9 9M16 12c-2-5-1-8 2-10 1 4 1 7-1 10"/><path d="M11 27h10"/></svg><span>Decor</span></button>
         </div>
+        <aside id="decor-lab" class="decor-lab" hidden>
+          <header><strong>Tile decor</strong><button id="decor-close" type="button" class="secondary" aria-label="Close decor panel">×</button></header>
+          <label>Object<select id="decor-picker"><option value="palm">Slanted palm</option><option value="tropical-forest">Dense tropical forest</option><option value="dense-jungle">Closed jungle canopy</option><option value="rowboat">Moored rowboat</option><option value="campground">18th-century camp</option></select></label>
+          <div class="decor-previews">
+            <figure><canvas id="decor-model-preview" width="220" height="170"></canvas><figcaption>Shaded 3D</figcaption></figure>
+            <figure><canvas id="decor-pixel-preview" width="64" height="52"></canvas><figcaption>Rasterized tile</figcaption></figure>
+          </div>
+          <div class="decor-orientation"><button id="decor-rotate-left" type="button" class="secondary" aria-label="Previous orientation">↺</button><span>Orientation <output id="decor-orientation">1 / 4</output></span><button id="decor-rotate-right" type="button" class="secondary" aria-label="Next orientation">↻</button></div>
+          <div class="decor-actions"><button id="decor-attach" type="button">Attach to selection</button><button id="decor-clear" type="button" class="secondary">Clear selection</button></div>
+          <p>Decor occupies one flat land tile. Reshaping that tile removes it.</p>
+        </aside>
         <aside id="capture-review" class="capture-review" hidden>
           <img id="capture-review-image" alt="Imported painted capture preview">
           <div><strong>Painted capture ready</strong><p id="capture-review-status"></p><button id="capture-approve" type="button">Approve slices</button><button id="capture-cancel" type="button" class="secondary">Cancel</button></div>
