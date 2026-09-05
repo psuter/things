@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Foliage Studio</title>  <script type="module" crossorigin src="/magellan/assets/foliage-D0bXTAwZ.js"></script>
+  <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-BmKxc5zR.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/foliage-ZSI4szHv.css">
+</head>
+<body class="foliage-page">
+<main class="foliage-shell">
+<header><div><p class="eyebrow">Magellan production tools</p><h1>Foliage studio</h1></div><p>Paint procedural vegetation over a catalog of tile shapes. <a href="./">Back to terrain editor</a></p></header>
+<section class="foliage-workspace">
+<div class="foliage-stage"><canvas id="foliage-canvas" width="480" height="320" aria-label="Foliage tile preview"></canvas><div id="foliage-status" role="status">Select a foliage type, then paint tiles</div></div>
+<aside class="foliage-controls">
+<label>Foliage type<select id="foliage-type"><option value="tall-grass">Tall grasses</option><option value="dry-grass">Dry beach grass / reeds</option><option value="low-shrub">Low shrubs</option><option value="tropical-forest">Tropical forest</option></select></label>
+<label>Density <output id="foliage-density-value">2</output><input id="foliage-density" type="range" min="0" max="4" step="1" value="2"></label>
+<label>Tile elevation <output id="foliage-background-value">Sea</output><input id="foliage-background" type="range" min="0" max="100" value="0"></label>
+<label>Variant seed<input id="foliage-seed" type="number" min="0" max="9999" step="1" value="17"></label>
+<div class="foliage-actions"><button id="foliage-clear" type="button" class="secondary">Clear painted tiles</button><button id="foliage-reset" type="button">Reset examples</button></div>
+<button id="foliage-atlas-generate" type="button">Generate 16-variant atlas</button><canvas id="foliage-atlas" width="384" height="160" aria-label="Generated foliage tile atlas"></canvas>
+<label class="foliage-check"><input id="foliage-layer-only" type="checkbox"> Foliage layer only</label>
+<p class="foliage-help">Tap or click a tile to paint it. Shift-click clears it. The board includes flat tiles, cardinal slopes, and raised/lowered corner slopes; each layer is generated deterministically from the tile shape, density, and seed.</p>
+<div class="foliage-legend"><span class="swatch grass"></span>Tall grasses <span class="swatch shrub"></span>Low shrubs <span class="swatch forest"></span>Tropical forest</div>
+</aside></section>
+</main>
+</body></html>
