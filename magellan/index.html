@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-DtgR7xHK.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-DXIcroH4.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-BmKxc5zR.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-DryhkGHO.css">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-BkwRotvc.css">
 </head>
   <body class="iso-page">
     <main class="iso-shell">
@@ -15,6 +15,8 @@
         </div>
         <label class="check"><input id="iso-fill" type="checkbox" checked> Surface fill</label>
         <button id="iso-pixels" type="button" class="secondary" aria-pressed="false">Flat pixels</button>
+        <button id="iso-game-mode" type="button" class="secondary" aria-pressed="false">Game mode</button>
+        <button id="iso-visibility" type="button" class="secondary" aria-pressed="false" hidden>Show visibility</button>
         <button id="iso-structure" type="button" class="secondary" aria-pressed="true">Hide grid</button>
         <button id="iso-save" type="button" class="secondary">Save map</button>
         <button id="iso-load" type="button" class="secondary">Load map</button>
@@ -68,6 +70,7 @@
           <div><strong>Painted capture ready</strong><p id="capture-review-status"></p><button id="capture-approve" type="button">Approve slices</button><button id="capture-cancel" type="button" class="secondary">Cancel</button></div>
         </aside>
         <div class="iso-badge"><span id="iso-status">Generating…</span><span id="iso-missing"></span><span id="iso-scale"></span></div>
+        <div id="walk-joystick" class="walk-joystick" aria-hidden="true"><div id="walk-stick" class="walk-stick"></div></div>
       </section>
       <footer class="iso-footer"><a href="./assets.html">Asset foundry</a> · <a href="./foliage.html">Foliage studio</a></footer>
     </main>
