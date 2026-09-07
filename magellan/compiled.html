@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Compiled Terrain</title>  <script type="module" crossorigin src="/magellan/assets/compiled-Bt5DxDWS.js"></script>
+  <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-tiKixZS0.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/compiled-hcZEoKY8.css">
+</head>
+<body class="compiled-page">
+<main class="compiled-shell">
+<header><div><p class="eyebrow">Magellan production tools</p><h1>Compiled terrain</h1></div><p>Bakes a saved map's geometry into precomputed tile bitmaps, then renders purely by lookup and blit. <a href="./">Back to terrain editor</a></p></header>
+<section class="compiled-workspace">
+<div class="compiled-stage"><canvas id="compiled-canvas" aria-label="Compiled terrain preview"></canvas><div id="compiled-status" role="status">Load a saved map to begin</div></div>
+<aside class="compiled-controls">
+<label>Load saved map<input id="compiled-load" type="file" accept="application/json"></label>
+<button id="compiled-compile" type="button" disabled>Compile</button>
+<p class="compiled-help">Drag to pan, scroll/pinch to zoom. Every tile and cliff face is looked up from the compiled asset set and blitted as-is - nothing about elevation, material, or shape is decided at draw time.</p>
+</aside>
+</section>
+</main>
+</body></html>
