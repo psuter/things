@@ -1,21 +1,40 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Magellan"><title>Magellan · Game</title>  <script type="module" crossorigin src="/magellan/assets/game-Dt2ZU5Dk.js"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Magellan"><title>Magellan · Game</title>  <script type="module" crossorigin src="/magellan/assets/game-GOOtuxQ0.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-BUDmuW30.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-8IUQBkl6.js">
-  <link rel="modulepreload" crossorigin href="/magellan/assets/game-runtime-M-VsmZfs.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/game-runtime-BgstjUw4.css">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/game-DHimvBdF.css">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/game-runtime-bdS6lNzS.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/game-runtime-BpoOyOgC.css">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/game-CLWR29Jx.css">
 </head>
 <body class="game-page">
 <div class="game-shell">
 <canvas id="game-canvas" aria-label="Magellan game"></canvas>
 <div id="walk-joystick-left" class="walk-joystick left" aria-hidden="true"><div id="walk-stick-left" class="walk-stick"></div></div>
 <div id="walk-joystick-right" class="walk-joystick right" aria-hidden="true"><div id="walk-stick-right" class="walk-stick"></div></div>
+<button id="action-blue" class="action-box left" type="button" hidden></button>
+<button id="action-red" class="action-box right" type="button" hidden></button>
 <div id="game-loading" class="game-loading" role="status">
 <div class="game-loading-pixels" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
 <p id="game-loading-text">Loading…</p>
+</div>
+<div id="game-character-select" class="character-select" hidden>
+<h1 class="character-select-title">Choose your look</h1>
+<div class="character-select-pair">
+<div class="character-select-card">
+<canvas id="preview-blue" class="character-preview" aria-label="Blue character preview"></canvas>
+<div class="character-select-row"><span class="character-select-label">Clothes</span><div id="clothes-blue" class="swatch-row" role="radiogroup" aria-label="Blue's clothes color"></div></div>
+<div class="character-select-row"><span class="character-select-label">Hair</span><div id="hair-blue" class="swatch-row" role="radiogroup" aria-label="Blue's hair color"></div></div>
+</div>
+<div class="character-select-card">
+<canvas id="preview-red" class="character-preview" aria-label="Red character preview"></canvas>
+<div class="character-select-row"><span class="character-select-label">Clothes</span><div id="clothes-red" class="swatch-row" role="radiogroup" aria-label="Red's clothes color"></div></div>
+<div class="character-select-row"><span class="character-select-label">Hair</span><div id="hair-red" class="swatch-row" role="radiogroup" aria-label="Red's hair color"></div></div>
+</div>
+</div>
+<p id="character-select-status" class="character-select-status">Compiling terrain…</p>
+<button id="character-select-start" class="character-select-start" type="button" disabled>Let's go!</button>
 </div>
 <div id="game-victory" class="game-victory" role="status" hidden>Victory!</div>
 </div>

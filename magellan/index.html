@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-BYjyMiXi.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-B3FacMmo.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-BUDmuW30.js">
   <link rel="stylesheet" crossorigin href="/magellan/assets/editor-mni0jx3T.css">
@@ -57,6 +57,16 @@
               <button id="tool-keypoint-red" class="terrain-tool keypoint-tool-red" type="button" role="menuitem" aria-pressed="false" title="Click a tile to place the red character's spawn point"><span>Red</span></button>
               <button id="tool-keypoint-treasure" class="terrain-tool keypoint-tool-treasure" type="button" role="menuitem" aria-pressed="false" title="Click a tile to place the treasure - the win condition in game.html"><span>Treasure</span></button>
               <button id="tool-keypoint-clear" class="terrain-tool" type="button" role="menuitem" title="Clear all key points"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 7l18 18M25 7L7 25"/></svg><span>Clear</span></button>
+            </div>
+          </div>
+          <div class="terrain-tool-group">
+            <button id="tool-boats" class="terrain-tool" type="button" aria-label="Open boat tools" aria-expanded="false" aria-pressed="false" title="Boats">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 18h24l-3 8H7z"/><path d="M9 18V8h4v10M16 6v12"/></svg><span>Boats</span>
+            </button>
+            <div id="boat-tools" class="terrain-submenu" role="menu" aria-label="Boat tools" hidden>
+              <button id="tool-boat-1" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Click sea tiles to place 1-seat rowboats"><span>1-seat</span></button>
+              <button id="tool-boat-2" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Click sea tiles to place 2-seat rowboats"><span>2-seat</span></button>
+              <button id="tool-boat-remove" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Click a boat to remove it"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 7l18 18M25 7L7 25"/></svg><span>Remove</span></button>
             </div>
           </div>
           <span class="tool-divider" aria-hidden="true"></span>
