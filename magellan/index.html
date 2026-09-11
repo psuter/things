@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-Dr4sIc8o.js"></script>
+  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Dimetric Terrain Lab</title>  <script type="module" crossorigin src="/magellan/assets/editor-BYjyMiXi.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-Dr8Jb0l9.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-CcAMEKTe.css">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-BUDmuW30.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/editor-mni0jx3T.css">
 </head>
   <body class="iso-page">
     <main class="iso-shell">
@@ -46,6 +46,17 @@
               <button id="tool-cliff-draw" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Draw and snap a cliff line"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 25c5-12 10-15 22-18M6 20l6 6M21 6l5 5"/></svg><span>Draw</span></button>
               <button id="tool-cliff-erase" class="terrain-tool" type="button" role="menuitem" aria-pressed="false" title="Swipe to erase cliff lines"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 20L18 7l9 9-10 10H9zM13 25h15"/><path d="M9 16l9 9"/></svg><span>Erase</span></button>
               <button id="tool-cliff-simplify" class="terrain-tool" type="button" role="menuitem" title="Remove cliff marks with no height break"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 10h7l4 5h5l3-3h5M4 23h8l4-4h12"/><path d="M22 5l6 6-6 6"/></svg><span>Simplify</span></button>
+            </div>
+          </div>
+          <div class="terrain-tool-group">
+            <button id="tool-keypoints" class="terrain-tool" type="button" aria-label="Open key point tools" aria-expanded="false" aria-pressed="false" title="Key points">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 28V5"/><path d="M9 6l17 6-17 6z"/></svg><span>Key points</span>
+            </button>
+            <div id="keypoint-tools" class="terrain-submenu" role="menu" aria-label="Key point tools" hidden>
+              <button id="tool-keypoint-blue" class="terrain-tool keypoint-tool-blue" type="button" role="menuitem" aria-pressed="false" title="Click a tile to place the blue character's spawn point"><span>Blue</span></button>
+              <button id="tool-keypoint-red" class="terrain-tool keypoint-tool-red" type="button" role="menuitem" aria-pressed="false" title="Click a tile to place the red character's spawn point"><span>Red</span></button>
+              <button id="tool-keypoint-treasure" class="terrain-tool keypoint-tool-treasure" type="button" role="menuitem" aria-pressed="false" title="Click a tile to place the treasure - the win condition in game.html"><span>Treasure</span></button>
+              <button id="tool-keypoint-clear" class="terrain-tool" type="button" role="menuitem" title="Clear all key points"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 7l18 18M25 7L7 25"/></svg><span>Clear</span></button>
             </div>
           </div>
           <span class="tool-divider" aria-hidden="true"></span>
