@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Compiled Terrain</title>  <script type="module" crossorigin src="/magellan/assets/compiled-yTk0HloB.js"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Compiled Terrain</title>  <script type="module" crossorigin src="/magellan/assets/compiled-DBmr_0Jk.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-BUDmuW30.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-8IUQBkl6.js">
-  <link rel="modulepreload" crossorigin href="/magellan/assets/game-runtime-B0YX3r6V.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/game-runtime-BpoOyOgC.css">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/game-runtime-DLuNfzdi.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/game-runtime-zXjloEkS.css">
 </head>
 <body class="compiled-page">
 <div class="compiled-shell">
@@ -19,7 +19,9 @@
 </div>
 <button id="compiled-compile" type="button" disabled>Compile</button>
 <label class="compiled-night" for="compiled-night">Night <output id="compiled-night-value">0%</output><input id="compiled-night" type="range" min="0" max="100" value="0" step="1" aria-label="Night intensity"></label>
-<p class="compiled-help">Drag to pan, scroll/pinch to zoom. Two characters: WASD or the left joystick walks the blue one, arrow keys or the right joystick walks the red one. Press Space to center the view on a character, alternating between the two. Press T then click the map to teleport whichever is nearer there. Press F to toggle fog of war, X to forget explored ground - each character explores its own ground, and the map shows whatever either one has seen. Press N to jump night fully on/off, or drag the Night slider for anything in between. When a contextual action (like boarding or leaving a rowboat) is available, a box appears above that character's joystick - press Tab for blue, Enter for red, or tap the box. Every tile and cliff face is looked up from a precompiled bitmap and blitted as-is.</p>
+<label class="compiled-toggle" for="compiled-coords"><input id="compiled-coords" type="checkbox"> Tile coordinates</label>
+<button id="compiled-export" type="button" class="compiled-secondary" disabled>Export view + state</button>
+<p class="compiled-help">Drag to pan, scroll/pinch to zoom. Two characters: WASD or the left joystick walks the blue one, arrow keys or the right joystick walks the red one. Press Space to center the view on a character, alternating between the two. Press T then click the map to teleport whichever is nearer there. Press F to toggle fog of war, X to forget explored ground - each character explores its own ground, and the map shows whatever either one has seen. Press N to jump night fully on/off, or drag the Night slider for anything in between. When a contextual action (like boarding or leaving a rowboat) is available, a box appears above that character's joystick - press Tab for blue, Enter for red, or tap the box. Every tile and cliff face is looked up from a precompiled bitmap and blitted as-is. Tick Tile coordinates to overlay each tile's (x, y) grid index, and use Export view + state to download the current view as a PNG alongside a JSON snapshot of the full scene - camera, characters, vehicles, carryables, and geometry - for precisely reporting a display bug.</p>
 </aside>
 <main class="compiled-stage">
 <canvas id="compiled-canvas" aria-label="Compiled terrain preview"></canvas>
