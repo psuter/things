@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10191d"><title>Magellan · Signaling Test</title>  <script type="module" crossorigin src="/magellan/assets/signaling-JOORO8UI.js"></script>
+  <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/qr-tools-CMQuJEzd.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/signaling-CjoDYm82.css">
+</head>
+<body class="signaling-page">
+<main class="signaling-shell">
+<header>
+<h1>Signaling test</h1>
+<p>A standalone WebRTC handshake test - nothing here touches the game. One side hosts and the others join; scan the invitation QR code, then scan the reply QR code. No server is involved. See NETWORKING.md. <a href="./">Back to the editor</a></p>
+<label class="option"><input id="use-stun" type="checkbox" checked> Use public STUN (needed to connect across different networks; turn off to test same-network only)</label>
+</header>
+
+<section id="role-picker" class="panel">
+<h2>What are you?</h2>
+<div class="row">
+<button id="pick-host" type="button">Host a session</button>
+<button id="pick-guest" type="button">Join a session</button>
+</div>
+</section>
+
+<section id="host-panel" class="panel" hidden>
+<h2>Host</h2>
+<p class="hint">For each guest: scan the invitation on their device, then scan their reply here.</p>
+<div id="guest-slots"></div>
+<div class="row"><button id="add-guest" type="button" class="secondary">Add another guest</button></div>
+<div class="row chat"><input id="host-chat" type="text" placeholder="Message to all connected guests" autocomplete="off"><button id="host-send" type="button">Send</button></div>
+</section>
+
+<section id="guest-panel" class="panel" hidden>
+<h2>Guest</h2>
+<div class="row"><button id="guest-scan" type="button">Scan invite QR code</button></div>
+<p>Let the host scan your reply</p>
+<canvas id="guest-qr" class="qr" hidden></canvas>
+<p id="guest-qr-hint" class="hint" hidden>Hold this up to the host's camera (they press "Scan their answer").</p>
+<pre id="guest-stats" class="stats"></pre>
+<div class="row chat"><input id="guest-chat" type="text" placeholder="Message to the host" autocomplete="off"><button id="guest-send" type="button">Send</button></div>
+</section>
+
+<section class="panel">
+<h2>Log</h2>
+<pre id="log" class="log"></pre>
+<div class="row"><button id="start-over" type="button" class="secondary">Start over</button></div>
+</section>
+</main>
+</body>
+</html>
