@@ -1,0 +1,172 @@
+{ "frames": {
+   "whale 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 1.aseprite": {
+    "frame": { "x": 120, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 2.aseprite": {
+    "frame": { "x": 240, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 3.aseprite": {
+    "frame": { "x": 360, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 4.aseprite": {
+    "frame": { "x": 480, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 5.aseprite": {
+    "frame": { "x": 600, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 6.aseprite": {
+    "frame": { "x": 720, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 7.aseprite": {
+    "frame": { "x": 840, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 8.aseprite": {
+    "frame": { "x": 960, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 9.aseprite": {
+    "frame": { "x": 1080, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 10.aseprite": {
+    "frame": { "x": 1200, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 11.aseprite": {
+    "frame": { "x": 1320, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 12.aseprite": {
+    "frame": { "x": 1440, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 13.aseprite": {
+    "frame": { "x": 1560, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 14.aseprite": {
+    "frame": { "x": 1680, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 15.aseprite": {
+    "frame": { "x": 1800, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 16.aseprite": {
+    "frame": { "x": 1920, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 17.aseprite": {
+    "frame": { "x": 2040, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   },
+   "whale 18.aseprite": {
+    "frame": { "x": 2160, "y": 0, "w": 120, "h": 28 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 120, "h": 28 },
+    "sourceSize": { "w": 120, "h": 28 },
+    "duration": 200
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.16.1-x64",
+  "image": "whale.png",
+  "format": "RGBA8888",
+  "size": { "w": 2280, "h": 28 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "whale", "opacity": 255, "blendMode": "normal" },
+   { "name": "blow", "opacity": 255, "blendMode": "normal" },
+   { "name": "foam", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
