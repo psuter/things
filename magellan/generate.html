@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#182329"><title>Magellan · Map sketch</title>  <script type="module" crossorigin src="/magellan/assets/generate-CQoq1PO8.js"></script>
+  <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/dom-zyD44q1k.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-persistence-3ytpQSIf.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-BmKxc5zR.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/generate-Dk74EOOg.css">
+</head>
+<body class="generate-page">
+<div class="generate-shell">
+<aside class="generate-sidebar">
+<a class="generate-back" href="./">← Terrain editor</a>
+<h1>Map sketch</h1>
+<p class="hint">Rough out the ground, water and cliffs from above, then <b>Solve</b> to turn it into a full, valid map you can open in the editor and finish by hand. The sketch is only a first draft: solved maps don't link back to it.</p>
+
+<section>
+<h2>Tool</h2>
+<div id="tools" class="tool-grid" role="radiogroup" aria-label="Tool"></div>
+<p id="tool-hint" class="hint"></p>
+</section>
+
+<section>
+<h2>Brush</h2>
+<label>Size <output id="radius-value"></output><input id="radius" type="range" min="1" max="40" value="8"></label>
+<label>Strength <output id="strength-value"></output><input id="strength" type="range" min="1" max="30" value="8"></label>
+<label>Plateau level <output id="level-value"></output><input id="level" type="range" min="1" max="20" value="6"></label>
+</section>
+
+<section>
+<h2>Start from</h2>
+<label>Islands <output id="islands-value"></output><input id="islands" type="range" min="1" max="12" value="4"></label>
+<label>Cliff coasts <output id="cliff-coasts-value"></output><input id="cliff-coasts" type="range" min="0" max="100" value="40"></label>
+<label>Lakes and rivers <output id="water-value"></output><input id="water" type="range" min="0" max="100" value="60"></label>
+<label>Vegetation <output id="vegetation-value"></output><input id="vegetation" type="range" min="0" max="100" value="60"></label>
+<label class="option"><input id="volcano" type="checkbox"> Dormant volcano with a caldera lake</label>
+<div class="row"><input id="seed" type="number" value="1" min="0" aria-label="Seed"><button id="random-archipelago" type="button">Random archipelago</button></div>
+<div class="row"><input id="size-width" type="number" min="80" max="512" aria-label="Width in tiles"> × <input id="size-height" type="number" min="64" max="512" aria-label="Height in tiles"><button id="new-sketch" type="button">Blank sea</button></div>
+<div class="row"><button id="undo" type="button" class="secondary">Undo</button><span class="hint">Ctrl/⌘+Z</span></div>
+</section>
+
+<section>
+<h2>Solve</h2>
+<label>Auto cliffs at painted steps of <output id="auto-cliff-value"></output><input id="auto-cliff" type="range" min="0" max="6" value="3"></label>
+<label>Drawn cliff drop <output id="cliff-drop-value"></output><input id="cliff-drop" type="range" min="1" max="4" value="3"></label>
+<div class="row"><button id="solve" type="button">Solve</button></div>
+<p id="status" class="status" role="status"></p>
+<ul id="warnings" class="warnings"></ul>
+</section>
+
+<section id="result-section" hidden>
+<h2>Result</h2>
+<div class="row"><button id="view-sketch" type="button" class="secondary">Sketch</button><button id="view-result" type="button" class="secondary">Solved map</button></div>
+<div class="row"><button id="download" type="button">Download map</button><button id="send" type="button" class="secondary">Send to editor</button></div>
+<p class="hint">Download, then load the file in the editor (or save it into <code>maps/</code>). <b>Send to editor</b> replaces the editor's saved map, keeping the old one under a backup key.</p>
+</section>
+</aside>
+<main class="generate-stage"><canvas id="sketch-canvas" aria-label="Map sketch"></canvas><div id="readout" class="readout"></div></main>
+</div>
+</body>
+</html>

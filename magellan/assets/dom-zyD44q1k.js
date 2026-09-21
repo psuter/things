@@ -1,0 +1,1 @@
+function n(r){const e=document.querySelector(r);if(!e)throw new Error(`Missing required element: ${r}`);return e}function t(r){const e=r.getContext("2d");if(!e)throw new Error("Canvas 2D unavailable");return e}export{t as a,n as r};

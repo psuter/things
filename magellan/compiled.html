@@ -1,15 +1,17 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Compiled Terrain</title>  <script type="module" crossorigin src="/magellan/assets/compiled-IANcpJE2.js"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#10191d"><title>Magellan · Compiled Terrain</title>  <script type="module" crossorigin src="/magellan/assets/compiled-lyQ4PIsO.js"></script>
   <link rel="modulepreload" crossorigin href="/magellan/assets/modulepreload-polyfill-B5Qt9EMX.js">
-  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-DeiHI72v.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-persistence-3ytpQSIf.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/terrain-visuals-DEAADIfZ.js">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/dom-zyD44q1k.js">
   <link rel="modulepreload" crossorigin href="/magellan/assets/foliage-atlas-BmKxc5zR.js">
-  <link rel="modulepreload" crossorigin href="/magellan/assets/compile-runtime-BfIAUTRC.js">
-  <link rel="stylesheet" crossorigin href="/magellan/assets/compile-runtime-zXjloEkS.css">
+  <link rel="modulepreload" crossorigin href="/magellan/assets/compile-runtime-DVI3NbF2.js">
+  <link rel="stylesheet" crossorigin href="/magellan/assets/compile-runtime-m8ANiI-Q.css">
 </head>
 <body class="compiled-page">
 <div class="compiled-shell">
-<aside class="compiled-sidebar">
+<aside id="compiled-sidebar" class="compiled-sidebar">
 <a class="compiled-back" href="./">&larr; Editor</a>
 <div id="compiled-status" class="compiled-status" role="status">Waiting for a map from the editor…</div>
 <div id="compiled-fps" class="compiled-fps">-- fps</div>
@@ -21,10 +23,17 @@
 <label class="compiled-night" for="compiled-night">Night <output id="compiled-night-value">0%</output><input id="compiled-night" type="range" min="0" max="100" value="0" step="1" aria-label="Night intensity"></label>
 <label class="compiled-toggle" for="compiled-coords"><input id="compiled-coords" type="checkbox"> Tile coordinates</label>
 <button id="compiled-export" type="button" class="compiled-secondary" disabled>Export view + state</button>
-<p class="compiled-help">Drag to pan, scroll/pinch to zoom. Two characters: WASD or the left joystick walks the blue one, arrow keys or the right joystick walks the red one. Press Space to center the view on a character, alternating between the two. Press T then click the map to teleport whichever is nearer there. Press F to toggle fog of war, X to forget explored ground - each character explores its own ground, and the map shows whatever either one has seen. Press N to jump night fully on/off, or drag the Night slider for anything in between. When a contextual action (like boarding or leaving a rowboat) is available, a box appears above that character's joystick - press Tab for blue, Enter for red, or tap the box. Every tile and cliff face is looked up from a precompiled bitmap and blitted as-is. Tick Tile coordinates to overlay each tile's (x, y) grid index, and use Export view + state to download the current view as a PNG alongside a JSON snapshot of the full scene - camera, characters, vehicles, carryables, and geometry - for precisely reporting a display bug.</p>
 </aside>
 <main class="compiled-stage">
 <canvas id="compiled-canvas" aria-label="Compiled terrain preview"></canvas>
+<button id="compiled-panel-toggle" class="compiled-float compiled-panel-toggle" type="button" aria-controls="compiled-sidebar" aria-expanded="true">Hide panel</button>
+<div class="compiled-quick" role="toolbar" aria-label="Keyboard shortcuts as buttons">
+<button id="quick-center" class="compiled-float" type="button" title="Center the view on a character, alternating (Space)">Center <kbd>Space</kbd></button>
+<button id="quick-night" class="compiled-float" type="button" aria-pressed="false" title="Night fully on or off (N)">Night <kbd>N</kbd></button>
+<button id="quick-fog" class="compiled-float" type="button" aria-pressed="true" title="Fog of war on or off (F)">Fog <kbd>F</kbd></button>
+<button id="quick-forget" class="compiled-float" type="button" title="Forget all explored ground (X)">Forget <kbd>X</kbd></button>
+<button id="quick-teleport" class="compiled-float" type="button" aria-pressed="false" title="Then click the map to teleport the nearer character there (T)">Teleport <kbd>T</kbd></button>
+</div>
 <div id="walk-joystick-left" class="walk-joystick left" aria-hidden="true"><div id="walk-stick-left" class="walk-stick"></div></div>
 <div id="walk-joystick-right" class="walk-joystick right" aria-hidden="true"><div id="walk-stick-right" class="walk-stick"></div></div>
 <button id="action-blue" class="action-box left" type="button" hidden></button>
