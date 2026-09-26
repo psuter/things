@@ -133,7 +133,7 @@ function preparePrint() {
   groups.forEach((group, index) => {
     const sheet = document.createElement('section'); sheet.className = 'print-sheet answer-sheet';
     sheet.append(printHeading('Little Endgames · Answer sheet', `Answers for practice sheet ${index + 1} of ${groups.length}`));
-    const note = document.createElement('p'); note.textContent = 'Lichess puzzle solutions; † marks a tablebase line. Alternatives may also win. An ending … means the line is shortened or stops before mate.';
+    const note = document.createElement('p'); note.textContent = '† tablebase line · … line truncated or stops before mate';
     sheet.append(note);
     const table = document.createElement('table');
     const head = table.createTHead().insertRow();

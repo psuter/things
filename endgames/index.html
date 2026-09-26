@@ -2,9 +2,9 @@
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Little Endgames · Chess cards</title><link rel="stylesheet" href="./style.css"></head>
 <body>
-<header><a class="brand" href="./">♜ <span>LITTLE ENDGAMES</span></a><span class="edition">THE PRACTICE COLLECTION / 01</span></header>
+<header><a class="brand" href="./">♜ <span>LITTLE ENDGAMES</span></a></header>
 <main>
-<section class="intro"><div><p class="eyebrow">SMALL BOARDS. BIG IDEAS.</p><h1>A little position.<br>A lot to discover.</h1><p class="description">Endgame cards for curious chess players. Set up a board,<br class="desktop"> take your time, and find a way to win.</p></div><aside><strong id="total">…</strong><span>real-game positions<br>fewer than 7 pieces<br>tablebase-verified wins</span></aside></section>
+<section class="intro"><h1>Little Endgames</h1><aside><strong id="total">…</strong><span>positions</span></aside></section>
 <section class="toolbar" aria-label="Card controls">
 <label>PIECES ON THE BOARD<select id="material"><option value="">All matchups</option></select></label>
 <label>PIECE COUNT<select id="count"><option value="">Any count</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
@@ -12,20 +12,20 @@
 <label>SORT BY<select id="sort"><option value="pieces">Fewest pieces</option><option value="material">Piece matchup</option><option value="rating">Puzzle rating</option></select></label>
 <div class="actions"><label class="toggle"><input type="checkbox" id="teacher">Teacher view</label><button id="print" disabled>Print worksheet ↗</button></div>
 </section>
-<p id="mate-filter-help" class="filter-help">Mate filter uses known Lichess mate-in tags. Unknown mate distances stay included.</p>
+<p id="mate-filter-help" class="visually-hidden">Excludes positions with known mate-in tags up to the selected number. Unknown mate distances remain included.</p>
 <section class="worksheet-controls" aria-label="Worksheet settings">
 <label>PROBLEMS<select id="batch"><option value="18">18 · one worksheet</option><option value="36">36 · two worksheets</option><option value="72">72 · four worksheets</option><option value="all">All matching problems</option></select></label>
 <label>PRINT LAYOUT<select id="layout"><option value="worksheet">Worksheet · 6 across</option><option value="cards">Large cards · 2 across</option></select></label>
 <label>PAPER<select id="paper"><option value="A4">A4</option><option value="Letter">US Letter</option></select></label>
 <label>ANSWER LINE<select id="line-length"><option value="6">3 moves</option><option value="12" selected>6 moves</option><option value="20">10 moves</option><option value="all">Full available line</option></select></label>
 <button id="shuffle" class="secondary">Shuffle a set</button>
-<p>The circle shows whose turn it is. Tick each problem as you finish. Grayscale worksheets include separate answer sheets.</p>
+<p>Turn indicator, completion checkbox, and separate answer sheet.</p>
 </section>
 <div class="collection-bar"><p id="summary" aria-live="polite">Loading your collection…</p></div>
 <p id="status" role="status"></p>
 <nav class="batch-navigation" aria-label="Problem batches"><button id="previous" class="secondary">← Previous set</button><span id="batch-label"></span><button id="next" class="secondary">Next set →</button></nav>
 <section id="cards" class="cards" aria-label="Endgame flashcards"></section>
 <div id="print-pages" aria-hidden="true"></div>
-<footer><p>Made for a board, a little patience, and a good conversation.</p><p>Positions: <a href="https://database.lichess.org/#puzzles">Lichess open puzzle database · CC0</a> · Results: <a href="https://tablebase.lichess.ovh/">Lichess tablebases</a></p><p>Wins assume perfect play. Matchups ignore color. Printed answers appear on separate sheets. Print at 100% scale with browser headers and footers off.</p></footer>
+<footer><a href="https://database.lichess.org/#puzzles">Lichess puzzle database</a> · <a href="https://tablebase.lichess.ovh/">Lichess tablebases</a></footer>
 </main><script src="./app.js"></script>
 </body></html>
