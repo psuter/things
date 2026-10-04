@@ -42,6 +42,7 @@ function matching() {
   const minMate = $('mate-min').value === '' ? null : Number($('mate-min').value);
   const maxMate = $('mate-max').value;
   const minRating = Number($('rating-min').value);
+  const maxRating = Number($('rating-max').value);
   const filtered = cards.filter(c => {
     const tag = c.themes?.find(theme => /^mateIn\d+$/.test(theme));
     const distance = tag ? Number(tag.slice(6)) : null;
@@ -50,7 +51,7 @@ function matching() {
       : maxMate === 'none'
         ? distance === null
         : distance !== null && (minMate === null || distance >= minMate) && (maxMate === '' || distance <= Number(maxMate));
-    return mateMatches && c.rating >= minRating && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value));
+    return mateMatches && c.rating >= minRating && c.rating <= maxRating && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value));
   });
   filtered.sort((a, b) => stableHash(a.id) - stableHash(b.id));
   if (shuffledIds) {
@@ -158,6 +159,7 @@ function preparePrint() {
 
 for (const id of ['material','count','mate-min','mate-max','rating-min','batch']) $(id).addEventListener('change', () => { offset = 0; shuffledIds = null; render(); });
 $('rating-min').addEventListener('input', () => { $('rating-value').value = $('rating-min').value; $('rating-value').textContent = $('rating-min').value; });
+$('rating-max').addEventListener('input', () => { $('rating-max-value').value = $('rating-max').value; $('rating-max-value').textContent = $('rating-max').value; });
 $('teacher').addEventListener('change', render);
 $('line-length').addEventListener('change', render);
 for (const id of ['layout','paper']) $(id).addEventListener('change', () => { $('print').textContent = $('layout').value === 'worksheet' ? 'Print worksheet ↗' : 'Print cards ↗'; preparePrint(); });
