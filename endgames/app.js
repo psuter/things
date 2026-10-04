@@ -34,12 +34,18 @@ async function load() {
 }
 
 function matching() {
-  const excludedMate = Number($('exclude-mate').value);
-  const filtered = cards.filter(c => !c.themes?.some(theme => {
-    // mateIn5 means five OR MORE moves in Lichess, so only exact 1–4 tags qualify.
-    const match = /^mateIn([1-4])$/.exec(theme);
-    return match && Number(match[1]) <= excludedMate;
-  }) && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value)));
+  const minMate = $('mate-min').value === '' ? null : Number($('mate-min').value);
+  const maxMate = $('mate-max').value;
+  const filtered = cards.filter(c => {
+    const tag = c.themes?.find(theme => /^mateIn\d+$/.test(theme));
+    const distance = tag ? Number(tag.slice(6)) : null;
+    const mateMatches = minMate === null && maxMate === ''
+      ? true
+      : maxMate === 'none'
+        ? distance === null
+        : distance !== null && (minMate === null || distance >= minMate) && (maxMate === '' || distance <= Number(maxMate));
+    return mateMatches && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value));
+  });
   filtered.sort((a,b) => $('sort').value === 'material' ? a.family.localeCompare(b.family) : $('sort').value === 'rating' ? a.rating - b.rating : a.pieces - b.pieces);
   if (shuffledIds) {
     const order = new Map(shuffledIds.map((id, index) => [id, index]));
@@ -144,7 +150,7 @@ function preparePrint() {
   });
 }
 
-for (const id of ['material','count','exclude-mate','sort','batch']) $(id).addEventListener('change', () => { offset = 0; shuffledIds = null; render(); });
+for (const id of ['material','count','mate-min','mate-max','sort','batch']) $(id).addEventListener('change', () => { offset = 0; shuffledIds = null; render(); });
 $('teacher').addEventListener('change', render);
 $('line-length').addEventListener('change', render);
 for (const id of ['layout','paper']) $(id).addEventListener('change', () => { $('print').textContent = $('layout').value === 'worksheet' ? 'Print worksheet ↗' : 'Print cards ↗'; preparePrint(); });

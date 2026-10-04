@@ -8,11 +8,12 @@
 <section class="toolbar" aria-label="Card controls">
 <label>PIECES ON THE BOARD<select id="material"><option value="">All matchups</option></select></label>
 <label>PIECE COUNT<select id="count"><option value="">Any count</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
-<label>EXCLUDE MATE IN ≤<select id="exclude-mate" aria-describedby="mate-filter-help"><option value="0">Off</option><option value="1">1 move</option><option value="2">2 moves</option><option value="3">3 moves</option><option value="4">4 moves</option></select></label>
+<label>MATE MIN<select id="mate-min" aria-describedby="mate-filter-help"><option value="">Any</option><option value="1">1 move</option><option value="2">2 moves</option><option value="3">3 moves</option><option value="4">4 moves</option><option value="5">5 moves</option><option value="6">6 moves</option><option value="7">7 moves</option><option value="8">8 moves</option><option value="9">9 moves</option><option value="10">10 moves</option></select></label>
+<label>MATE MAX<select id="mate-max" aria-describedby="mate-filter-help"><option value="">Any</option><option value="1">1 move</option><option value="2">2 moves</option><option value="3">3 moves</option><option value="4">4 moves</option><option value="5">5 moves</option><option value="6">6 moves</option><option value="7">7 moves</option><option value="8">8 moves</option><option value="9">9 moves</option><option value="10">10 moves</option><option value="none">No forced mate</option></select></label>
 <label>SORT BY<select id="sort"><option value="pieces">Fewest pieces</option><option value="material">Piece matchup</option><option value="rating">Puzzle rating</option></select></label>
 <div class="actions"><label class="toggle"><input type="checkbox" id="teacher">Teacher view</label><button id="print" disabled>Print worksheet ↗</button></div>
 </section>
-<p id="mate-filter-help" class="visually-hidden">Excludes positions with known mate-in tags up to the selected number. Unknown mate distances remain included.</p>
+<p id="mate-filter-help" class="visually-hidden">Mate filters use exact forced-mate distances. Unknown distances are included only when both filters are Any.</p>
 <section class="worksheet-controls" aria-label="Worksheet settings">
 <label>PROBLEMS<select id="batch"><option value="18">18 · one worksheet</option><option value="36">36 · two worksheets</option><option value="72">72 · four worksheets</option><option value="all">All matching problems</option></select></label>
 <label>PRINT LAYOUT<select id="layout"><option value="worksheet">Worksheet · 6 across</option><option value="cards">Large cards · 2 across</option></select></label>
