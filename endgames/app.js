@@ -8,6 +8,11 @@ const names = {K:'king', Q:'queen', R:'rook', B:'bishop', N:'knight', P:'pawn'};
 const describe = s => [...s].map(p => names[p]).join(' + ');
 const numberOf = c => String(cards.indexOf(c) + 1).padStart(3, '0');
 const chunks = (items, size) => Array.from({length: Math.ceil(items.length / size)}, (_, i) => items.slice(i * size, (i + 1) * size));
+const stableHash = value => {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
+  return hash >>> 0;
+};
 
 function mainlineText(card, limit = $('line-length').value) {
   if (!card.mainline?.length) return `Main line not cached yet. First move: ${card.bestMove}`;
@@ -36,6 +41,7 @@ async function load() {
 function matching() {
   const minMate = $('mate-min').value === '' ? null : Number($('mate-min').value);
   const maxMate = $('mate-max').value;
+  const minRating = Number($('rating-min').value);
   const filtered = cards.filter(c => {
     const tag = c.themes?.find(theme => /^mateIn\d+$/.test(theme));
     const distance = tag ? Number(tag.slice(6)) : null;
@@ -44,9 +50,9 @@ function matching() {
       : maxMate === 'none'
         ? distance === null
         : distance !== null && (minMate === null || distance >= minMate) && (maxMate === '' || distance <= Number(maxMate));
-    return mateMatches && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value));
+    return mateMatches && c.rating >= minRating && (!$('material').value || c.family === $('material').value) && (!$('count').value || c.pieces === Number($('count').value));
   });
-  filtered.sort((a,b) => $('sort').value === 'material' ? a.family.localeCompare(b.family) : $('sort').value === 'rating' ? a.rating - b.rating : a.pieces - b.pieces);
+  filtered.sort((a, b) => stableHash(a.id) - stableHash(b.id));
   if (shuffledIds) {
     const order = new Map(shuffledIds.map((id, index) => [id, index]));
     filtered.sort((a,b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity));
@@ -150,7 +156,8 @@ function preparePrint() {
   });
 }
 
-for (const id of ['material','count','mate-min','mate-max','sort','batch']) $(id).addEventListener('change', () => { offset = 0; shuffledIds = null; render(); });
+for (const id of ['material','count','mate-min','mate-max','rating-min','batch']) $(id).addEventListener('change', () => { offset = 0; shuffledIds = null; render(); });
+$('rating-min').addEventListener('input', () => { $('rating-value').value = $('rating-min').value; $('rating-value').textContent = $('rating-min').value; });
 $('teacher').addEventListener('change', render);
 $('line-length').addEventListener('change', render);
 for (const id of ['layout','paper']) $(id).addEventListener('change', () => { $('print').textContent = $('layout').value === 'worksheet' ? 'Print worksheet ↗' : 'Print cards ↗'; preparePrint(); });

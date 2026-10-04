@@ -56,3 +56,4 @@
 .toolbar{flex-wrap:wrap}.filter-help{font-size:11px;color:#748074;margin:10px 0}
 
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.range-control{min-width:150px}.range-control output{font-size:12px;letter-spacing:0;font-weight:400}.range-control input{width:150px;padding:0;accent-color:#36583f}
