@@ -1,17 +1,20 @@
+import {EmulatorPort} from './emulator.js';
+
 export class Plotter extends EventTarget {
-  constructor(){super();this.port=null;this.writer=null;this.reader=null;this.pending=null;this.connected=false;this.fault=false;this.held=false;this.buffer='';this.rxBytes=0;this.txBytes=0;this.busy=false;this.position=null;this.quietStatusPoll=false;this.machine=JSON.parse(localStorage.getItem('plotui.machine')||'null')||{homed:false,envelope:null};if(this.machine.home&&!this.machine.home.corner)this.machine.home.corner='top-left';}
+  constructor({emulatorMode=false}={}){super();this.emulatorMode=emulatorMode;this.port=null;this.writer=null;this.reader=null;this.pending=null;this.connected=false;this.fault=false;this.held=false;this.buffer='';this.rxBytes=0;this.txBytes=0;this.busy=false;this.position=null;this.quietStatusPoll=false;this.machine=JSON.parse(localStorage.getItem(this.storageKey)||'null')||{homed:false,envelope:null};if(this.machine.home&&!this.machine.home.corner)this.machine.home.corner='top-left';}
+  get storageKey(){return this.emulatorMode?'plotui.emulator.machine':'plotui.machine';}
   emit(type,detail){this.dispatchEvent(new CustomEvent(type,{detail}));}
   log(kind,text){this.emit('log',{kind,text});}
   state(){this.emit('state',{connected:this.connected,info:this.port?.getInfo?.(),fault:this.fault,held:this.held,motionLocked:this.motionLocked,invalidated:!!this.machine.invalidated,homed:!!this.machine.homed,rxBytes:this.rxBytes,txBytes:this.txBytes});}
   async connect(baudRate=115200){
     if(this.port) throw Error('Already connected');
-    const port=await navigator.serial.requestPort();
+    const port=this.emulatorMode?new EmulatorPort(detail=>this.emit('emulator',detail)):await navigator.serial.requestPort();
     await port.open({baudRate,dataBits:8,stopBits:1,parity:'none',flowControl:'none'});
-    this.port=port;this.writer=port.writable.getWriter();this.reader=port.readable.getReader();this.buffer='';this.fault=false;this.held=false;this.position=null;
+    this.port=port;this.emulatorPort=this.emulatorMode?port:null;this.writer=port.writable.getWriter();this.reader=port.readable.getReader();this.buffer='';this.fault=false;this.held=false;this.position=null;
     this.machine={...this.machine,homed:false,invalidated:!!this.machine.envelope,page:null};this.saveMachine();
     this.rxBytes=0;this.txBytes=0;this.readTask=this.readLoop();
     this.log('system',`Port open at ${baudRate} baud; waiting for board startup…`);
-    await new Promise(r=>setTimeout(r,2000));
+    await new Promise(r=>setTimeout(r,this.emulatorMode?150:2000));
     if(this.port!==port || this.reader===null) throw Error('Device disconnected during startup');
     this.connected=true;this.state();this.log('system','Ready. No commands sent automatically.');
   }
@@ -36,7 +39,7 @@ export class Plotter extends EventTarget {
     const m=line.match(/^<[^,>]+(?:,[^,>]*)?,MPos:([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+)/);
     return m?{state:line.slice(1).split(/[|,]/,1)[0],x:Number(m[1]),y:Number(m[2]),z:Number(m[3])}:null;
   }
-  saveMachine(){localStorage.setItem('plotui.machine',JSON.stringify(this.machine));this.emit('machine',this.machine);}
+  saveMachine(){localStorage.setItem(this.storageKey,JSON.stringify(this.machine));this.emit('machine',this.machine);}
   async getPosition(timeout=5000,quiet=false){
     if(this.pending)throw Error('Wait for the current command before reading position');
     const before=this.position;
@@ -305,7 +308,7 @@ export class Plotter extends EventTarget {
   async disconnect(){
     this.connected=false;this.abort('Disconnected; command outcome may be unknown');this.state();
     await this.reader?.cancel().catch(()=>{});await this.readTask;
-    this.writer?.releaseLock();this.writer=null;
+    this.writer?.releaseLock();this.writer=null;this.emulatorPort=null;
     const port=this.port;this.port=null;await port?.close().catch(()=>{});this.state();
   }
 }

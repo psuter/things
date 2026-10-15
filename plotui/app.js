@@ -1,13 +1,42 @@
 import {Plotter} from './serial.js';
 import {importSvg} from './svg.js';
 import {buildPlotJob,mapMachineToEnvelope,mapMachineToPage,mapPointToMachine} from './gcode.js';
-const plotter=new Plotter();
+const emulatorMode=new URLSearchParams(location.search).get('emulate_plotter')==='true';
+const plotter=new Plotter({emulatorMode});
 const $=id=>document.getElementById(id),lines=[];
+if(emulatorMode){document.body.classList.add('emulator-mode');$('emulator-mode-badge').hidden=false;$('emulator-panel').hidden=false;$('connect').textContent='Connect emulator';$('message').textContent='Emulator mode · no USB device or Web Serial access is used.';}
 export const message=text=>{$('message').textContent=text;};
 plotter.addEventListener('log',({detail:{kind,text}})=>{const line=`${new Date().toLocaleTimeString()}  ${kind.toUpperCase().padEnd(6)} ${text}`;lines.push(line);if(lines.length>2000)lines.shift();$('log').textContent=lines.join('\n');$('log').scrollTop=$('log').scrollHeight;});
+const simTrace=[];let simFrame=0,simPosition={x:0,y:0,z:0};
+function simCoordinates(point){
+ const area=plotter.machine.envelope||{width:297,height:210},home=plotter.machine.home;
+ let x,y;
+ if(home){const xs=home.xSign??area.xSign??1,ys=home.ySign??area.ySign??-1,localX=(point.x-home.x)*xs,localY=(point.y-home.y)*ys;x=home.corner?.endsWith('right')?area.width-localX:localX;y=home.corner?.startsWith('bottom')?area.height-localY:localY;}
+ else{x=point.x;y=-point.y;}
+ return{x:45+Math.max(0,Math.min(area.width,x))*330/area.width,y:35+Math.max(0,Math.min(area.height,y))*233/area.height};
+}
+function drawEmulatorPosition(){simFrame=0;const p=simCoordinates(simPosition);$('emulator-gantry').setAttribute('transform',`translate(0 ${p.y-25})`);$('emulator-head').setAttribute('transform',`translate(${p.x} 0)`);$('emulator-readout').textContent=`X ${simPosition.x.toFixed(1)} · Y ${simPosition.y.toFixed(1)} mm`;$('emulator-pen').textContent=plotter.emulatorPort?.penDown?'PEN DOWN':'PEN UP';$('emulator-panel').classList.toggle('pen-down',!!plotter.emulatorPort?.penDown);}
+plotter.addEventListener('emulator',({detail})=>{
+ if(detail.type==='segment'){
+  const a=simCoordinates({x:detail.x1,y:detail.y1}),b=simCoordinates({x:detail.x2,y:detail.y2}),line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);line.setAttribute('class','emulator-trace');$('emulator-trace').append(line);simTrace.push(line);
+  if(simTrace.length>2500)simTrace.shift().remove();
+ }else if(detail.position){simPosition=detail.position;if(!simFrame)simFrame=requestAnimationFrame(drawEmulatorPosition);}
+});
+function clearEmulatorTrace(){simTrace.splice(0).forEach(line=>line.remove());}
+$('emulator-clear').onclick=clearEmulatorTrace;
+$('emulator-hide').onclick=()=>{$('emulator-panel').hidden=true;$('emulator-show').hidden=false;};
+$('emulator-show').onclick=()=>{$('emulator-panel').hidden=false;$('emulator-show').hidden=true;};
+$('emulator-demo-setup').onclick=()=>{
+ if(!emulatorMode||!plotter.connected)return;
+ const home={x:0,y:0,corner:'top-left',xSign:1,ySign:-1},envelope={width:297,height:210,xSign:1,ySign:-1};
+ const tl={x:20,y:-19},tr={x:277,y:-19},bl={x:20,y:-190},br={x:277,y:-190},vx={x:257,y:0},vy={x:0,y:-171};
+ plotter.machine={homed:true,invalidated:false,home,envelope,page:{corners:{'top-left':tl,'top-right':tr,'bottom-left':bl,'bottom-right':br},frame:{topLeft:tl,topRight:tr,bottomLeft:bl,bottomRight:br,vx,vy,width:257,height:171,closureError:null},capturedAt:new Date().toISOString()}};
+ plotter.saveMachine();plotter.emulatorPort.setPosition(tl.x,tl.y);plotter.position={state:'Idle',x:tl.x,y:tl.y,z:0};plotter.emit('position',plotter.position);message('Demo setup ready · machine envelope and page calibration applied.');
+};
 function renderMachine(machine=plotter.machine){
  const el=$('machine-status');if(!el)return;
- $('connection-step-state').textContent=plotter.connected?'Connected':'USB · GRBL';
+ $('connection-step-state').textContent=plotter.connected?'Connected':emulatorMode?'Emulator':'USB · GRBL';
  $('home-step-state').textContent=plotter.canMoveInsideEnvelope?'Locked':machine.homed?'Set opposite':'Required';
  const cornerNames={'top-left':'top left','top-right':'top right','bottom-left':'bottom left','bottom-right':'bottom right'};
  const opposite={'top-left':'bottom right','top-right':'bottom left','bottom-left':'top right','bottom-right':'top left'};
@@ -180,7 +209,7 @@ $('plot-drawing').onclick=async()=>{
  try{
   const commands=buildPlotJob(preparedDrawing?.paths,plotter.machine,plotOptions());
   if(!plotter.canMoveInsideEnvelope||!plotter.machine.page?.frame||!plotter.connected||plotter.position?.state!=='Idle'||preparedDrawing.outOfBounds)throw Error('Plotting is not ready: calibrate the page, then check the motion lock, machine area, connection, and GRBL Idle state.');
-  if(!confirm(`Send ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths? The plotter will move within the measured envelope. Keep hands clear.`))return;
+  if(!confirm(emulatorMode?`Simulate ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths?`:`Send ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths? The plotter will move within the measured envelope. Keep hands clear.`))return;
   plotJobRunning=true;plotProgressText=`Sending G-code · 0 / ${commands.length} commands acknowledged.`;updatePlotControls();
   const sent=await plotter.plot(commands);message(`Plot complete · ${sent} commands acknowledged; GRBL is Idle.`);
  }catch(e){message(e.message);$('plot-progress').textContent=e.message;}
@@ -188,9 +217,9 @@ $('plot-drawing').onclick=async()=>{
 };
 let positionTimer=null,positionPollRunning=false;
 async function pollPosition(){if(!plotter.connected||plotter.busy||plotter.pending||positionPollRunning)return;positionPollRunning=true;try{await plotter.getPosition(1200,true);}catch{}finally{positionPollRunning=false;}}
-plotter.addEventListener('state',()=>{const on=plotter.connected;$('status').textContent=on?(plotter.fault?'Reconnect required':plotter.held?'Feed held':'Connected'):'Disconnected';$('connect').disabled=!!plotter.port || !('serial' in navigator);$('disconnect').disabled=!plotter.port;$('baud').disabled=!!plotter.port;renderMachine();document.querySelectorAll('[data-command],#send,#reset,[data-jog]').forEach(b=>{const resume=b.dataset.command==='~',hold=b.dataset.command==='!';b.disabled=!on||plotter.fault||(!hold&&plotter.busy)||(resume?!plotter.held:plotter.held);});$('hold').disabled=!on||plotter.fault;if(on&&!positionTimer){pollPosition();positionTimer=setInterval(pollPosition,500);}else if(!on&&positionTimer){clearInterval(positionTimer);positionTimer=null;}updatePlotControls();});
+plotter.addEventListener('state',()=>{const on=plotter.connected;$('status').textContent=on?(plotter.fault?'Reconnect required':plotter.held?'Feed held':emulatorMode?'Emulator':'Connected'):'Disconnected';$('connect').disabled=!!plotter.port || (!emulatorMode&&!('serial' in navigator));$('disconnect').disabled=!plotter.port;$('baud').disabled=!!plotter.port;$('emulator-demo-setup').disabled=!on||!emulatorMode;renderMachine();document.querySelectorAll('[data-command],#send,#reset,[data-jog]').forEach(b=>{const resume=b.dataset.command==='~',hold=b.dataset.command==='!';b.disabled=!on||plotter.fault||(!hold&&plotter.busy)||(resume?!plotter.held:plotter.held);});$('hold').disabled=!on||plotter.fault;if(on&&!positionTimer){pollPosition();positionTimer=setInterval(pollPosition,500);}else if(!on&&positionTimer){clearInterval(positionTimer);positionTimer=null;}updatePlotControls();});
 async function send(command){try{const result=await plotter.command(command);message(result.at(-1)==='ok'?'Acknowledged (movement may still be running).':result.join('\n'));return result;}catch(e){message(e.message);throw e;}}
-$('connect').onclick=async()=>{try{$('connect').disabled=true;await plotter.connect(Number($('baud').value));message('Connected. Use Status or Firmware to inspect the controller.');}catch(e){message(e.message);await plotter.disconnect();$('connect').disabled=false;}};
+$('connect').onclick=async()=>{try{$('connect').disabled=true;if(emulatorMode)clearEmulatorTrace();await plotter.connect(Number($('baud').value));message(emulatorMode?'Emulator connected. Use the controls or load an SVG to simulate plotting.':'Connected. Use Status or Firmware to inspect the controller.');}catch(e){message(e.message);await plotter.disconnect();$('connect').disabled=false;}};
 $('disconnect').onclick=()=>plotter.disconnect().catch(e=>message(e.message));
 document.querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>send(b.dataset.command).catch(()=>{}));
 function jogDirection(axis,sign){const step=Number($('jog-step').value)*sign;plotter.jog(axis,step).catch(e=>message(e.message));}
@@ -207,5 +236,5 @@ $('reset').onclick=()=>{if(confirm('Soft-reset GRBL? This aborts motion and may 
 $('command-form').onsubmit=e=>{e.preventDefault();send($('command').value).catch(()=>{});};
 $('download').onclick=()=>{const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='plotui-serial.log';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 renderMachine();
-if(!('serial' in navigator)){$('connect').disabled=true;message('Web Serial is unavailable. Open this page in Chrome using localhost or HTTPS.');}
+if(!emulatorMode&&!('serial' in navigator)){$('connect').disabled=true;message('Web Serial is unavailable. Open this page in Chrome using localhost or HTTPS.');}
 plotter.state();
