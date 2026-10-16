@@ -1,64 +1,39 @@
-import {Plotter} from './serial.js';
+import {plotter} from './connection.js';
 import {importSvg} from './svg.js';
 import {buildPlotJob,mapMachineToEnvelope,mapMachineToPage,mapPointToMachine} from './gcode.js';
-const emulatorMode=new URLSearchParams(location.search).get('emulate_plotter')==='true';
-const plotter=new Plotter({emulatorMode});
+const debugMode=new URLSearchParams(location.search).get('debug')==='true'&&['localhost','127.0.0.1'].includes(location.hostname);
+if(debugMode){const liveReload=new EventSource('/__plotui_live');liveReload.addEventListener('reload',()=>location.reload());}
 const $=id=>document.getElementById(id),lines=[];
-if(emulatorMode){document.body.classList.add('emulator-mode');$('emulator-mode-badge').hidden=false;$('emulator-panel').hidden=false;$('connect').textContent='Connect emulator';$('message').textContent='Emulator mode · no USB device or Web Serial access is used.';}
+const terminalContent=$('terminal-content');
+terminalContent.append(document.querySelector('.console-heading'),$('log'),$('message'),$('command-form'));
+document.querySelectorAll('.workflow-step h3').forEach(heading=>{if(heading.textContent.trim()==='Serial transcript')heading.remove();});
+const terminalPanel=$('terminal-panel');
+const terminalToggle=$('terminal-toggle');
+function setTerminalCollapsed(collapsed){terminalPanel.classList.toggle('collapsed',collapsed);terminalToggle.setAttribute('aria-expanded',String(!collapsed));terminalToggle.setAttribute('aria-label',collapsed?'Expand terminal':'Collapse terminal');}
+setTerminalCollapsed(false);
+terminalToggle.addEventListener('click',()=>setTerminalCollapsed(!terminalPanel.classList.contains('collapsed')));
 export const message=text=>{$('message').textContent=text;};
-plotter.addEventListener('log',({detail:{kind,text}})=>{const line=`${new Date().toLocaleTimeString()}  ${kind.toUpperCase().padEnd(6)} ${text}`;lines.push(line);if(lines.length>2000)lines.shift();$('log').textContent=lines.join('\n');$('log').scrollTop=$('log').scrollHeight;});
-const simTrace=[];let simFrame=0,simPosition={x:0,y:0,z:0};
-function simCoordinates(point){
- const area=plotter.machine.envelope||{width:297,height:210},home=plotter.machine.home;
- let x,y;
- if(home){const xs=home.xSign??area.xSign??1,ys=home.ySign??area.ySign??-1,localX=(point.x-home.x)*xs,localY=(point.y-home.y)*ys;x=home.corner?.endsWith('right')?area.width-localX:localX;y=home.corner?.startsWith('bottom')?area.height-localY:localY;}
- else{x=point.x;y=-point.y;}
- return{x:45+Math.max(0,Math.min(area.width,x))*330/area.width,y:35+Math.max(0,Math.min(area.height,y))*233/area.height};
-}
-function drawEmulatorPosition(){simFrame=0;const p=simCoordinates(simPosition);$('emulator-gantry').setAttribute('transform',`translate(0 ${p.y-25})`);$('emulator-head').setAttribute('transform',`translate(${p.x} 0)`);$('emulator-readout').textContent=`X ${simPosition.x.toFixed(1)} · Y ${simPosition.y.toFixed(1)} mm`;$('emulator-pen').textContent=plotter.emulatorPort?.penDown?'PEN DOWN':'PEN UP';$('emulator-panel').classList.toggle('pen-down',!!plotter.emulatorPort?.penDown);}
-plotter.addEventListener('emulator',({detail})=>{
- if(detail.type==='segment'){
-  const a=simCoordinates({x:detail.x1,y:detail.y1}),b=simCoordinates({x:detail.x2,y:detail.y2}),line=document.createElementNS('http://www.w3.org/2000/svg','line');
-  line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);line.setAttribute('class','emulator-trace');$('emulator-trace').append(line);simTrace.push(line);
-  if(simTrace.length>2500)simTrace.shift().remove();
- }else if(detail.position){simPosition=detail.position;if(!simFrame)simFrame=requestAnimationFrame(drawEmulatorPosition);}
-});
-function clearEmulatorTrace(){simTrace.splice(0).forEach(line=>line.remove());}
-$('emulator-clear').onclick=clearEmulatorTrace;
-$('emulator-hide').onclick=()=>{$('emulator-panel').hidden=true;$('emulator-show').hidden=false;};
-$('emulator-show').onclick=()=>{$('emulator-panel').hidden=false;$('emulator-show').hidden=true;};
-$('emulator-demo-setup').onclick=()=>{
- if(!emulatorMode||!plotter.connected)return;
- const home={x:0,y:0,corner:'top-left',xSign:1,ySign:-1},envelope={width:297,height:210,xSign:1,ySign:-1};
- const tl={x:20,y:-19},tr={x:277,y:-19},bl={x:20,y:-190},br={x:277,y:-190},vx={x:257,y:0},vy={x:0,y:-171};
- plotter.machine={homed:true,invalidated:false,home,envelope,page:{corners:{'top-left':tl,'top-right':tr,'bottom-left':bl,'bottom-right':br},frame:{topLeft:tl,topRight:tr,bottomLeft:bl,bottomRight:br,vx,vy,width:257,height:171,closureError:null},capturedAt:new Date().toISOString()}};
- plotter.saveMachine();plotter.emulatorPort.setPosition(tl.x,tl.y);plotter.position={state:'Idle',x:tl.x,y:tl.y,z:0};plotter.emit('position',plotter.position);message('Demo setup ready · machine envelope and page calibration applied.');
-};
+plotter.addEventListener('log',({detail:{kind,text}})=>{const line=`${new Date().toLocaleTimeString()}  ${kind.toUpperCase().padEnd(6)} ${text}`;lines.push(line);if(lines.length>1000)lines.shift();const log=$('log');log.textContent=lines.join('\n');log.scrollTop=log.scrollHeight;});
+let homingPendingCorner=null;
 function renderMachine(machine=plotter.machine){
  const el=$('machine-status');if(!el)return;
- $('connection-step-state').textContent=plotter.connected?'Connected':emulatorMode?'Emulator':'USB · GRBL';
+ $('connection-step-state').textContent=plotter.connected?'Connected':'USB · GRBL';
  $('home-step-state').textContent=plotter.canMoveInsideEnvelope?'Locked':machine.homed?'Set opposite':'Required';
  const cornerNames={'top-left':'top left','top-right':'top right','bottom-left':'bottom left','bottom-right':'bottom right'};
- const opposite={'top-left':'bottom right','top-right':'bottom left','bottom-left':'top right','bottom-right':'top left'};
- const corner=machine.home?.corner||$('start-corner').value;
- if(machine.homed&&machine.home)$('start-corner').value=corner;
- if(!machine.homed)el.textContent=machine.envelope?`Travel envelope saved (${machine.envelope.width.toFixed(1)} × ${machine.envelope.height.toFixed(1)} mm), but this connection needs homing. Bounds are unlocked; set the current corner as home or jog to a known corner first.`:'Choose the nearest corner, jog there, and set it as home.';
- else if(machine.envelope)el.textContent=`Homed at ${cornerNames[corner]||'selected corner'} · recorded travel ${machine.envelope.width.toFixed(1)} × ${machine.envelope.height.toFixed(1)} mm${machine.invalidated?' · motion lock invalidated':''}.`;
- else el.textContent=`${cornerNames[corner]||'Selected corner'} captured. Jog to the ${opposite[corner]} and record the machine envelope.`;
- $('set-home').textContent=`Set current position as ${cornerNames[$('start-corner').value]||'home'}`;
- $('start-corner').disabled=plotter.busy||(machine.homed&&!machine.invalidated);
- $('set-home').disabled=!plotter.connected||plotter.busy||plotter.held||plotter.fault;
- $('capture-envelope').textContent=`Capture ${opposite[corner]||'opposite'} corner`;
- $('capture-envelope').disabled=!machine.homed||!plotter.connected||plotter.busy||plotter.held||plotter.fault;
- $('move-home-offset').disabled=!machine.homed||!machine.home||!plotter.connected||plotter.busy||plotter.held||plotter.fault;
- document.querySelectorAll('[data-machine-corner]').forEach(button=>button.disabled=!plotter.canMoveInsideEnvelope||!plotter.connected||plotter.busy||plotter.held||plotter.fault);
- const page=machine.page,frame=page?.frame,captured=['top-left','top-right','bottom-left'].filter(name=>page?.corners?.[name]).length;
+ const opposite={'top-left':'bottom-right','top-right':'bottom-left','bottom-left':'top-right','bottom-right':'top-left'};
+ if(plotter.canMoveInsideEnvelope)el.textContent=`Machine locked · ${machine.envelope.width.toFixed(1)} × ${machine.envelope.height.toFixed(1)} mm.`;
+ else if(homingPendingCorner)el.textContent=`${cornerNames[homingPendingCorner]} selected. Move to ${opposite[homingPendingCorner].replace('-',' ')} and select that corner.`;
+ else if(machine.homed&&machine.home&&machine.invalidated)el.textContent='Motion lock invalidated. Move to a corner and select it to start again.';
+ else el.textContent=machine.envelope?'This connection needs homing. Move to any corner and select it.':'Move to any machine corner and select it.';
+ const lockedCorners=plotter.canMoveInsideEnvelope?[machine.home?.corner,oppositeCorner(machine.home?.corner)]:[];
+ const interactive=plotter.connected&&!plotter.busy&&!plotter.held&&!plotter.fault;
+ document.querySelectorAll('[data-home-corner]').forEach(button=>{const c=button.dataset.homeCorner,selected=c===homingPendingCorner,locked=lockedCorners.includes(c),next=!!homingPendingCorner&&c===opposite[homingPendingCorner];button.disabled=!interactive||plotter.canMoveInsideEnvelope||!!homingPendingCorner&&!next;button.classList.toggle('selected',selected);button.classList.toggle('next-corner',next);button.classList.toggle('locked-corner',locked);button.setAttribute('aria-pressed',String(selected||locked));button.textContent=`${locked?'✓ ':''}${selected?'Home: ':locked?'':'Mark '}${cornerNames[c][0].toUpperCase()+cornerNames[c].slice(1)}`;});
+ const page=machine.page,frame=page?.frame,captured=Object.keys(page?.corners||{}).length;
  $('page-step-state').textContent=frame?'Ready':`${captured}/3`;
- $('page-status').textContent=!plotter.canMoveInsideEnvelope?'Lock the machine envelope before recording page corners.':frame?`Page frame ready · ${frame.width.toFixed(1)} × ${frame.height.toFixed(1)} mm${frame.closureError===null?'':` · fourth-corner fit error ${frame.closureError.toFixed(2)} mm`}${frame.closureError!==null&&frame.closureError>3?' · recalibrate before plotting.':'.'}`:captured?`${captured} / 3 required corners recorded. Mark top left, top right, and bottom left with the nib tip.`:'Move with the pen nib over each sheet corner, then record top left, top right, and bottom left.';
+ $('page-status').textContent=!plotter.canMoveInsideEnvelope?'Lock the machine envelope before recording page corners.':frame?`Page frame ready · ${frame.width.toFixed(1)} × ${frame.height.toFixed(1)} mm${frame.closureError===null?' · fourth-corner check optional':` · fourth-corner fit error ${frame.closureError.toFixed(2)} mm`}${frame.closureError!==null&&frame.closureError>3?' · recalibrate before plotting.':'.'}`:captured?`${captured} / 3 corners recorded. Mark ${3-captured} more.`:'Mark any three page corners with the pen nib.';
  $('page-status').classList.toggle('drawing-error',!!frame&&frame.closureError!==null&&frame.closureError>3);
- document.querySelectorAll('[data-page-corner]').forEach(button=>button.disabled=!plotter.canMoveInsideEnvelope||!plotter.connected||plotter.busy||plotter.held||plotter.fault);
+ document.querySelectorAll('[data-page-corner]').forEach(button=>{const name=button.dataset.pageCorner,marked=!!page?.corners?.[name],checkCorner=frame?.checkCorner||(frame?'bottom-right':null),title=cornerNames[name][0].toUpperCase()+cornerNames[name].slice(1);button.disabled=!plotter.canMoveInsideEnvelope||!plotter.connected||plotter.busy||plotter.held||plotter.fault;button.textContent=frame&&name===checkCorner?`${marked?'✓ ':''}Check ${title}`:marked?`✓ ${title}`:`Mark ${title}`;});
  $('clear-page').disabled=!page||plotter.busy;
- $('go-center').disabled=!plotter.canMoveInsideEnvelope||!plotter.connected||plotter.busy||plotter.held||plotter.fault;
  const locked=plotter.motionLocked;
  $('motion-lock').textContent=locked?'🔒 Motion locked':machine.invalidated?'⚠ Motion lock invalidated':'🔓 Motion unlocked';
  $('motion-lock').classList.toggle('locked',locked);$('motion-lock').classList.toggle('invalidated',!!machine.invalidated);
@@ -95,18 +70,18 @@ function renderMap(machine=plotter.machine,cornerNames={'top-left':'top left','t
 }
 function oppositeCorner(corner){return {'top-left':'bottom-right','top-right':'bottom-left','bottom-left':'top-right','bottom-right':'top-left'}[corner]||'opposite corner';}
 plotter.addEventListener('machine',e=>renderMachine(e.detail));
-$('start-corner').onchange=()=>{renderMachine();$('start-corner').blur();};
 $('jog-step').onchange=()=>$('jog-step').blur();
-$('set-home').onclick=()=>plotter.markHome($('start-corner').value).then(()=>message(`Manual home recorded at the ${$('start-corner').value.replace('-',' ')} corner.`)).catch(e=>message(e.message));
-$('invalidate-lock').onclick=()=>{if(confirm('Invalidate the recorded motion bounds? Movement can then go outside the measured envelope until you set home and record it again.')){plotter.invalidateLock();message('Motion lock invalidated. Jog carefully; bounds are not being checked.');}};
-$('capture-envelope').onclick=()=>plotter.captureEnvelope().then(e=>message(`Machine envelope recorded: ${e.width.toFixed(1)} × ${e.height.toFixed(1)} mm.`)).catch(e=>message(e.message));
-$('move-home-offset').onclick=()=>{
- const xText=$('home-offset-x').value.trim(),yText=$('home-offset-y').value.trim();
- if(!xText&&!yText){message('Enter a horizontal or vertical offset.');return;}
- const x=xText?Number(xText):0,y=yText?Number(yText):0;
- plotter.moveFromHomeOffset(x,y).then(()=>message(`Moved ${x.toFixed(1)} mm horizontally and ${y.toFixed(1)} mm vertically from the selected home corner. You can now capture the opposite corner.`)).catch(e=>message(e.message));
-};
-document.querySelectorAll('[data-machine-corner]').forEach(button=>button.onclick=()=>plotter.goToMachineCorner(button.dataset.machineCorner).then(()=>message(`Moved to the ${button.dataset.machineCorner.replace('-',' ')} machine corner, 1 mm inside the measured edges.`)).catch(e=>message(e.message)));
+async function selectHomeCorner(corner){
+ if(!plotter.connected||plotter.busy||plotter.held||plotter.fault||plotter.canMoveInsideEnvelope)return;
+ try{
+  if(!homingPendingCorner){await plotter.markHome(corner);homingPendingCorner=corner;message(`Home set at ${corner.replace('-',' ')}. Move to the opposite corner.`);}
+  else if(corner!==oppositeCorner(homingPendingCorner)){message(`Select the opposite corner: ${oppositeCorner(homingPendingCorner).replace('-',' ')}.`);return;}
+  else{const envelope=await plotter.captureEnvelope();homingPendingCorner=null;message(`Machine locked · ${envelope.width.toFixed(1)} × ${envelope.height.toFixed(1)} mm.`);}
+  renderMachine();
+ }catch(error){message(error.message);}
+}
+document.querySelectorAll('[data-home-corner]').forEach(button=>button.addEventListener('click',()=>selectHomeCorner(button.dataset.homeCorner)));
+$('invalidate-lock').onclick=()=>{if(confirm('Invalidate the recorded motion bounds?')){homingPendingCorner=null;plotter.invalidateLock();message('Motion lock invalidated.');}};
 document.querySelectorAll('[data-page-corner]').forEach(button=>button.onclick=()=>plotter.markPageCorner(button.dataset.pageCorner).then(page=>message(page.frame?`Page frame recorded: ${page.frame.width.toFixed(1)} × ${page.frame.height.toFixed(1)} mm.`:`Page ${button.dataset.pageCorner.replace('-',' ')} recorded.`)).catch(e=>message(e.message)));
 $('clear-page').onclick=()=>plotter.clearPageCalibration();
 plotter.addEventListener('position',()=>renderMap());
@@ -209,7 +184,7 @@ $('plot-drawing').onclick=async()=>{
  try{
   const commands=buildPlotJob(preparedDrawing?.paths,plotter.machine,plotOptions());
   if(!plotter.canMoveInsideEnvelope||!plotter.machine.page?.frame||!plotter.connected||plotter.position?.state!=='Idle'||preparedDrawing.outOfBounds)throw Error('Plotting is not ready: calibrate the page, then check the motion lock, machine area, connection, and GRBL Idle state.');
-  if(!confirm(emulatorMode?`Simulate ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths?`:`Send ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths? The plotter will move within the measured envelope. Keep hands clear.`))return;
+  if(!confirm(`Send ${commands.length} G-code commands for ${preparedDrawing.paths.length} paths? The plotter will move within the measured envelope. Keep hands clear.`))return;
   plotJobRunning=true;plotProgressText=`Sending G-code · 0 / ${commands.length} commands acknowledged.`;updatePlotControls();
   const sent=await plotter.plot(commands);message(`Plot complete · ${sent} commands acknowledged; GRBL is Idle.`);
  }catch(e){message(e.message);$('plot-progress').textContent=e.message;}
@@ -217,14 +192,13 @@ $('plot-drawing').onclick=async()=>{
 };
 let positionTimer=null,positionPollRunning=false;
 async function pollPosition(){if(!plotter.connected||plotter.busy||plotter.pending||positionPollRunning)return;positionPollRunning=true;try{await plotter.getPosition(1200,true);}catch{}finally{positionPollRunning=false;}}
-plotter.addEventListener('state',()=>{const on=plotter.connected;$('status').textContent=on?(plotter.fault?'Reconnect required':plotter.held?'Feed held':emulatorMode?'Emulator':'Connected'):'Disconnected';$('connect').disabled=!!plotter.port || (!emulatorMode&&!('serial' in navigator));$('disconnect').disabled=!plotter.port;$('baud').disabled=!!plotter.port;$('emulator-demo-setup').disabled=!on||!emulatorMode;renderMachine();document.querySelectorAll('[data-command],#send,#reset,[data-jog]').forEach(b=>{const resume=b.dataset.command==='~',hold=b.dataset.command==='!';b.disabled=!on||plotter.fault||(!hold&&plotter.busy)||(resume?!plotter.held:plotter.held);});$('hold').disabled=!on||plotter.fault;if(on&&!positionTimer){pollPosition();positionTimer=setInterval(pollPosition,500);}else if(!on&&positionTimer){clearInterval(positionTimer);positionTimer=null;}updatePlotControls();});
+plotter.addEventListener('state',()=>{const on=plotter.connected;$('status').textContent=on?(plotter.fault?'Reconnect required':plotter.held?'Feed held':'Connected'):'Disconnected';$('connect').disabled=!!plotter.port||!plotter.available;$('disconnect').disabled=!plotter.port;$('baud').disabled=!!plotter.port;renderMachine();document.querySelectorAll('[data-command],#send,#reset,[data-jog]').forEach(b=>{const resume=b.dataset.command==='~',hold=b.dataset.command==='!';b.disabled=!on||plotter.fault||(!hold&&plotter.busy)||(resume?!plotter.held:plotter.held);});$('hold').disabled=!on||plotter.fault;if(on&&!positionTimer){pollPosition();positionTimer=setInterval(pollPosition,500);}else if(!on&&positionTimer){clearInterval(positionTimer);positionTimer=null;}updatePlotControls();});
 async function send(command){try{const result=await plotter.command(command);message(result.at(-1)==='ok'?'Acknowledged (movement may still be running).':result.join('\n'));return result;}catch(e){message(e.message);throw e;}}
-$('connect').onclick=async()=>{try{$('connect').disabled=true;if(emulatorMode)clearEmulatorTrace();await plotter.connect(Number($('baud').value));message(emulatorMode?'Emulator connected. Use the controls or load an SVG to simulate plotting.':'Connected. Use Status or Firmware to inspect the controller.');}catch(e){message(e.message);await plotter.disconnect();$('connect').disabled=false;}};
+$('connect').onclick=async()=>{try{$('connect').disabled=true;await plotter.connect(Number($('baud').value));message('Connected. Use Status or Firmware to inspect the controller.');}catch(e){message(e.message);await plotter.disconnect();$('connect').disabled=!plotter.available;}};
 $('disconnect').onclick=()=>plotter.disconnect().catch(e=>message(e.message));
 document.querySelectorAll('[data-command]').forEach(b=>b.onclick=()=>send(b.dataset.command).catch(()=>{}));
 function jogDirection(axis,sign){const step=Number($('jog-step').value)*sign;plotter.jog(axis,step).catch(e=>message(e.message));}
 document.querySelectorAll('[data-jog]').forEach(b=>b.onclick=()=>jogDirection(b.getAttribute('aria-axis'),Number(b.getAttribute('aria-sign'))));
-$('go-center').onclick=()=>plotter.goToCenter().then(()=>message('Moved to the center of the recorded machine envelope.')).catch(e=>message(e.message));
 window.addEventListener('keydown',e=>{
  if(e.altKey||e.ctrlKey||e.metaKey||e.repeat||e.target instanceof Element&&e.target.matches('input,textarea,select,[contenteditable="true"]'))return;
  const keys={ArrowLeft:['X',-1],ArrowRight:['X',1],ArrowUp:['Y',1],ArrowDown:['Y',-1]};
@@ -236,5 +210,5 @@ $('reset').onclick=()=>{if(confirm('Soft-reset GRBL? This aborts motion and may 
 $('command-form').onsubmit=e=>{e.preventDefault();send($('command').value).catch(()=>{});};
 $('download').onclick=()=>{const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='plotui-serial.log';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 renderMachine();
-if(!emulatorMode&&!('serial' in navigator)){$('connect').disabled=true;message('Web Serial is unavailable. Open this page in Chrome using localhost or HTTPS.');}
+if(!plotter.available){$('connect').disabled=true;message('Web Serial is unavailable. Open this page in Chrome using localhost or HTTPS.');}
 plotter.state();

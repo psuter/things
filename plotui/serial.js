@@ -1,26 +1,23 @@
-import {EmulatorPort} from './emulator.js';
-
 export class Plotter extends EventTarget {
-  constructor({emulatorMode=false}={}){super();this.emulatorMode=emulatorMode;this.port=null;this.writer=null;this.reader=null;this.pending=null;this.connected=false;this.fault=false;this.held=false;this.buffer='';this.rxBytes=0;this.txBytes=0;this.busy=false;this.position=null;this.quietStatusPoll=false;this.machine=JSON.parse(localStorage.getItem(this.storageKey)||'null')||{homed:false,envelope:null};if(this.machine.home&&!this.machine.home.corner)this.machine.home.corner='top-left';}
-  get storageKey(){return this.emulatorMode?'plotui.emulator.machine':'plotui.machine';}
+  constructor({requestPort,storageKey='plotui.machine',startupDelay=2000}={}){super();this.requestPort=requestPort||(()=>navigator.serial.requestPort());this.available=!!requestPort||(typeof navigator!=='undefined'&&'serial'in navigator);this.storageKey=storageKey;this.startupDelay=startupDelay;this.port=null;this.writer=null;this.reader=null;this.pending=null;this.connected=false;this.fault=false;this.held=false;this.buffer='';this.rxBytes=0;this.txBytes=0;this.busy=false;this.position=null;this.quietStatusPoll=false;this.machine=JSON.parse(localStorage.getItem(this.storageKey)||'null')||{homed:false,envelope:null};if(this.machine.home&&!this.machine.home.corner)this.machine.home.corner='top-left';}
   emit(type,detail){this.dispatchEvent(new CustomEvent(type,{detail}));}
   log(kind,text){this.emit('log',{kind,text});}
   state(){this.emit('state',{connected:this.connected,info:this.port?.getInfo?.(),fault:this.fault,held:this.held,motionLocked:this.motionLocked,invalidated:!!this.machine.invalidated,homed:!!this.machine.homed,rxBytes:this.rxBytes,txBytes:this.txBytes});}
   async connect(baudRate=115200){
     if(this.port) throw Error('Already connected');
-    const port=this.emulatorMode?new EmulatorPort(detail=>this.emit('emulator',detail)):await navigator.serial.requestPort();
+    const port=await this.requestPort();
     await port.open({baudRate,dataBits:8,stopBits:1,parity:'none',flowControl:'none'});
-    this.port=port;this.emulatorPort=this.emulatorMode?port:null;this.writer=port.writable.getWriter();this.reader=port.readable.getReader();this.buffer='';this.fault=false;this.held=false;this.position=null;
+    this.port=port;this.writer=port.writable.getWriter();this.reader=port.readable.getReader();this.buffer='';this.fault=false;this.held=false;this.position=null;
     this.machine={...this.machine,homed:false,invalidated:!!this.machine.envelope,page:null};this.saveMachine();
     this.rxBytes=0;this.txBytes=0;this.readTask=this.readLoop();
     this.log('system',`Port open at ${baudRate} baud; waiting for board startup…`);
-    await new Promise(r=>setTimeout(r,this.emulatorMode?150:2000));
+    await new Promise(r=>setTimeout(r,this.startupDelay));
     if(this.port!==port || this.reader===null) throw Error('Device disconnected during startup');
     this.connected=true;this.state();this.log('system','Ready. No commands sent automatically.');
   }
   async readLoop(){
     const decoder=new TextDecoder();
-    try {while(true){const {value,done}=await this.reader.read();if(done)break;this.rxBytes+=value.byteLength;if(!this.quietStatusPoll)this.log('bytes',Array.from(value.slice(0,80),b=>b.toString(16).padStart(2,'0')).join(' '));this.feed(decoder.decode(value,{stream:true}));}}
+    try {while(true){const {value,done}=await this.reader.read();if(done)break;this.rxBytes+=value.byteLength;this.feed(decoder.decode(value,{stream:true}));}}
     catch(e){this.log('error',e.message);}
     finally {this.reader?.releaseLock();this.reader=null;this.connected=false;this.abort('Serial connection closed');this.state();}
   }
@@ -83,16 +80,22 @@ export class Plotter extends EventTarget {
       if(position.state!=='Idle')throw Error(`Mark a page corner only while GRBL is Idle (currently ${position.state})`);
       const {home,envelope}=this.machine,x=(position.x-home.x)*(home.xSign??envelope.xSign??1),y=(position.y-home.y)*(home.ySign??envelope.ySign??-1);
       if(x<-.05||x>envelope.width+.05||y<-.05||y>envelope.height+.05)throw Error('The marked page corner is outside the locked machine envelope');
-      const previous=this.machine.page||{},restartingFrame=!!previous.frame&&corner!=='bottom-right';
+      const previous=this.machine.page||{},previousCheckCorner=previous.frame?.checkCorner|| (previous.frame?'bottom-right':null),restartingFrame=!!previous.frame&&corner!==previousCheckCorner;
       const corners={...(restartingFrame?{}:(previous.corners||{})),[corner]:{x:position.x,y:position.y}};
       let frame=null;
-      if(corners['top-left']&&corners['top-right']&&corners['bottom-left']){
-        const a=corners['top-left'],b=corners['top-right'],c=corners['bottom-left'];
+      const names=['top-left','top-right','bottom-left','bottom-right'],opposite={'top-left':'bottom-right','top-right':'bottom-left','bottom-left':'top-right','bottom-right':'top-left'},captured=names.filter(name=>corners[name]);
+      if(captured.length>=3){
+        const checkCorner=captured.length===3?names.find(name=>!corners[name]):previousCheckCorner;
+        const measuredNames=captured.length===4?names.filter(name=>name!==checkCorner):captured;
+        const missing=checkCorner||names.find(name=>!corners[name]);
+        const anchorName=opposite[missing],anchor=corners[anchorName],adjacent=measuredNames.filter(name=>name!==anchorName).map(name=>corners[name]);
+        if(!anchor||adjacent.length!==2)throw Error('Could not identify three distinct page corners; clear calibration and mark them again');
+        const expected={x:adjacent[0].x+adjacent[1].x-anchor.x,y:adjacent[0].y+adjacent[1].y-anchor.y};
+        const complete={...corners,[missing]:expected},a=complete['top-left'],b=complete['top-right'],c=complete['bottom-left'];
         const vx={x:b.x-a.x,y:b.y-a.y},vy={x:c.x-a.x,y:c.y-a.y},width=Math.hypot(vx.x,vx.y),height=Math.hypot(vy.x,vy.y),area=Math.abs(vx.x*vy.y-vx.y*vy.x);
         if(width<1||height<1||width>1000||height>1000||area<1)throw Error('The three page corners must form a non-degenerate area at least 1 mm wide and high');
-        const expected={x:b.x+c.x-a.x,y:b.y+c.y-a.y};
-        const actual=corners['bottom-right'];
-        frame={topLeft:a,topRight:b,bottomLeft:c,bottomRight:expected,vx,vy,width,height,closureError:actual?Math.hypot(actual.x-expected.x,actual.y-expected.y):null};
+        const actual=corners[missing];
+        frame={topLeft:a,topRight:b,bottomLeft:c,bottomRight:complete['bottom-right'],vx,vy,width,height,checkCorner,closureError:captured.length===4?Math.hypot(actual.x-expected.x,actual.y-expected.y):null};
       }
       this.machine={...this.machine,page:{corners,frame,capturedAt:new Date().toISOString()}};this.saveMachine();
       const label=corner.replace('-',' ');this.log('system',`Page ${label} recorded at machine X${position.x.toFixed(3)} Y${position.y.toFixed(3)}.`);
@@ -292,7 +295,7 @@ export class Plotter extends EventTarget {
     });
     this.log('tx',command);
     // Install the acknowledgement handler before writing: some devices reply immediately.
-    this.writer.write(new TextEncoder().encode(command+'\n')).then(()=>{this.txBytes+=command.length+1;this.log('written',`${command.length+1} bytes accepted by serial stream`);}).catch(e=>{this.fault=true;this.abort(e.message);});
+    this.writer.write(new TextEncoder().encode(command+'\n')).then(()=>{this.txBytes+=command.length+1;}).catch(e=>{this.fault=true;this.abort(e.message);});
     return result;
   }
   async realtime(command,silent=false){
@@ -302,13 +305,13 @@ export class Plotter extends EventTarget {
     if(command==='~')this.held=false;
     if(command==='\x18'){this.fault=true;this.abort('Soft reset requested; reconnect before further commands');}
     if(!silent)this.log('tx',command==='\x18'?'Ctrl-X (soft reset)':command);
-    await this.writer.write(new TextEncoder().encode(command));this.txBytes+=command.length;if(!silent)this.log('written',`${command.length} byte accepted by serial stream`);this.state();
+    await this.writer.write(new TextEncoder().encode(command));this.txBytes+=command.length;this.state();
     return ['Real-time byte sent; device response appears in transcript.'];
   }
   async disconnect(){
     this.connected=false;this.abort('Disconnected; command outcome may be unknown');this.state();
     await this.reader?.cancel().catch(()=>{});await this.readTask;
-    this.writer?.releaseLock();this.writer=null;this.emulatorPort=null;
+    this.writer?.releaseLock();this.writer=null;
     const port=this.port;this.port=null;await port?.close().catch(()=>{});this.state();
   }
 }
