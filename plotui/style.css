@@ -77,6 +77,14 @@
 @media(max-width:900px){.remote{padding-left:36px;padding-bottom:max(5px,env(safe-area-inset-bottom))}.sidebar{padding-bottom:0}}
 @media(max-width:760px){.remote{gap:8px}.remote-pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(3,34px)}}
 
+.preview-orientation{display:flex;align-items:center;gap:4px;flex:none}
+.preview-orientation button{width:29px;height:29px;min-height:29px;padding:2px;border-radius:7px;font-size:18px;line-height:1}
+.preview-orientation button[aria-pressed="true"]{border-color:#6c9479;background:#e5f0e5;color:#185b39}
+.plotter-compass{width:34px;height:34px;flex:none;overflow:visible}
+.plotter-compass circle{fill:#f8f9f5;stroke:#b9c5ba;stroke-width:1}
+.plotter-compass path{fill:none;stroke:#315b47;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.plotter-compass text{font:5px system-ui,sans-serif;fill:#52645a;text-anchor:middle}
+
 .terminal-panel{flex:0 0 clamp(270px,25vw,360px);width:clamp(270px,25vw,360px);min-width:48px;min-height:0;height:100%;align-self:stretch;display:flex;flex-direction:column;background:#15221f;color:#d4e1d8;border-left:1px solid #33423b;overflow:hidden}
 .terminal-panel.collapsed{flex-basis:48px;width:48px}
 .terminal-bar{flex:0 0 48px;height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;background:#20312c;color:#dbe6dc;font:12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}

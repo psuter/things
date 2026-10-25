@@ -90,7 +90,7 @@ $('clear-page').onclick=()=>plotter.clearPageCalibration();
 plotter.addEventListener('position',()=>renderMap());
 let selectedSvg=null;
 const svgInput=$('svg-file'),svgStatus=$('svg-status');
-let drawingVersion=0,preparedDrawing=null,previewMode='machine',selectionBounds=null,dragState=null,drawingSelected=false;
+let drawingVersion=0,preparedDrawing=null,previewMode='machine',previewRotation=0,previewCenter={x:0,y:0},selectionBounds=null,dragState=null,drawingSelected=false,drawingImport=null;
 const drawingInteraction=$('drawing-interaction'),drawingSelection=$('drawing-selection');
 function drawingArea(){const m=plotter.machine;if(m.envelope&&m.homed&&!m.invalidated&&m.page?.frame)return{width:m.page.frame.width,height:m.page.frame.height,label:'Calibrated page'};if(m.envelope&&m.homed&&!m.invalidated)return{width:m.envelope.width,height:m.envelope.height,label:'Measured machine envelope'};return{width:210,height:297,label:'A4 preview (machine not homed)'};}
 function envelopeToMachine(point,machine){
@@ -113,7 +113,10 @@ function renderPreviewGeometry(geometry){
  const {width,height,area,machine,frame,mode,viewBox,bed:bedBounds,machineCorners}=geometry,preview=$('drawing-preview'),bed=$('drawing-bed'),page=$('drawing-page'),machineOutline=$('drawing-machine-outline');
  $('page-key').hidden=!frame;
  $('view-machine').setAttribute('aria-pressed',String(mode==='machine'));$('view-page').setAttribute('aria-pressed',String(mode==='page'));$('view-page').disabled=!frame;
- preview.setAttribute('viewBox',viewBox.join(' '));
+ const [vx,vy,vw,vh]=viewBox,cx=vx+vw/2,cy=vy+vh/2,rotation=$('preview-rotation'),compass=$('plotter-compass-axes');previewCenter={x:cx,y:cy};
+ if(previewRotation){preview.setAttribute('viewBox',[cx-vh/2,cy-vw/2,vh,vw].join(' '));rotation.setAttribute('transform',`translate(${cx+cy} ${cy-cx}) rotate(90)`);}
+ else{preview.setAttribute('viewBox',viewBox.join(' '));rotation.removeAttribute('transform');}
+ const rotateButton=$('preview-rotate');rotateButton.setAttribute('aria-pressed',String(!!previewRotation));rotateButton.setAttribute('aria-label',previewRotation?'Reset preview rotation':'Rotate preview 90 degrees clockwise');rotateButton.title=previewRotation?'Reset preview rotation':'Rotate preview 90° clockwise';rotateButton.textContent=previewRotation?'↶':'↻';compass.setAttribute('transform',`rotate(${previewRotation} 20 20)`);
  for(const [key,value] of Object.entries(bedBounds))bed.setAttribute(key,value);
  bed.classList.toggle('machine-bed',!!frame&&mode==='machine');bed.classList.toggle('page-bed',!!frame&&mode==='page');
  if(frame&&mode==='machine'){page.setAttribute('points',[frame.topLeft,frame.topRight,frame.bottomRight,frame.bottomLeft].map(point=>{const p=mapMachineToEnvelope(point,machine);return`${p.x.toFixed(3)},${p.y.toFixed(3)}`;}).join(' '));page.setAttribute('visibility','visible');}else page.setAttribute('visibility','hidden');
@@ -130,24 +133,25 @@ function updateDrawingSelection(bounds){
  for(const corner of ['nw','ne','sw','se']){const hx=corner.includes('e')?x+width:x,hy=corner.includes('s')?y+height:y,handle=document.createElementNS('http://www.w3.org/2000/svg','rect');handle.setAttribute('x',hx-1.25);handle.setAttribute('y',hy-1.25);handle.setAttribute('width',2.5);handle.setAttribute('height',2.5);handle.setAttribute('class','drawing-scale-handle');handle.dataset.resize=corner;handle.setAttribute('aria-label',`Drag ${corner} corner to resize proportionally`);drawingSelection.append(handle);}
 }
 async function renderDrawing(){
- const version=++drawingVersion,area=drawingArea(),geometry=previewGeometry(),preview=$('drawing-preview'),pathsGroup=$('drawing-paths');
+ const version=++drawingVersion;drawingImport?.abort();const controller=new AbortController();drawingImport=controller;const area=drawingArea(),geometry=previewGeometry(),preview=$('drawing-preview'),pathsGroup=$('drawing-paths');
  const geometryLabel=renderPreviewGeometry(geometry);
- if(!selectedSvg){preparedDrawing=null;drawingInteraction.removeAttribute('transform');pathsGroup.replaceChildren();updateDrawingSelection(null);$('drawing-status').textContent=geometry.frame?`${geometryLabel} · green outline marks the calibrated page`:`${geometryLabel} · import an SVG to preview`;preview.classList.remove('out-of-bounds');$('drawing-metrics').textContent='';$('drawing-warnings').textContent='';return;}
- const options={targetWidth:area.width,targetHeight:area.height,margin:8,curveTolerance:Number($('curve-tolerance').value),simplifyTolerance:Number($('simplify-tolerance').value),sort:$('sort-paths').checked,scalePercent:Number($('drawing-scale').value),offsetX:Number($('drawing-offset-x').value),offsetY:Number($('drawing-offset-y').value)};
+ if(!selectedSvg){drawingImport=null;preparedDrawing=null;drawingInteraction.removeAttribute('transform');pathsGroup.replaceChildren();updateDrawingSelection(null);$('drawing-status').textContent=geometry.frame?`${geometryLabel} · green outline marks the calibrated page`:`${geometryLabel} · import an SVG to preview`;preview.classList.remove('out-of-bounds');$('drawing-metrics').textContent='';$('drawing-warnings').textContent='';return;}
+ preparedDrawing=null;updatePlotControls();
+ const options={targetWidth:area.width,targetHeight:area.height,margin:8,curveTolerance:Number($('curve-tolerance').value),simplifyTolerance:Number($('simplify-tolerance').value),sort:$('sort-paths').checked,scalePercent:Number($('drawing-scale').value),offsetX:Number($('drawing-offset-x').value),offsetY:Number($('drawing-offset-y').value),signal:controller.signal,onProgress:(phase,done,total)=>{if(version===drawingVersion)$('drawing-status').textContent=`${phase}${total>1?` · ${Math.floor(done)}/${Math.floor(total)}`:''} · ${area.width.toFixed(0)} × ${area.height.toFixed(0)} mm`;}};
  if(!Number.isFinite(options.curveTolerance)||options.curveTolerance<=0||!Number.isFinite(options.simplifyTolerance)||options.simplifyTolerance<0||!Number.isFinite(options.scalePercent)||options.scalePercent<=0||!Number.isFinite(options.offsetX)||!Number.isFinite(options.offsetY)){$('drawing-status').textContent='Enter positive tolerances and a valid scale or offset.';return;}
- $('drawing-status').textContent=`Calculating paths · ${area.width.toFixed(0)} × ${area.height.toFixed(0)} mm`;pathsGroup.replaceChildren();
+ $('drawing-status').textContent=`Calculating paths · ${area.width.toFixed(0)} × ${area.height.toFixed(0)} mm`;
  try{
-  const result=await importSvg(selectedSvg,options);if(version!==drawingVersion)return;preparedDrawing=result;$('drawing-step-state').textContent=`${result.paths.length} paths`;
-  const frag=document.createDocumentFragment();let displayBounds=null;for(const path of result.paths){const points=geometry.frame&&geometry.mode==='machine'?path.points.map(point=>mapMachineToEnvelope(mapPointToMachine(point,geometry.machine),geometry.machine)):path.points;for(const p of points){if(!displayBounds)displayBounds={minX:p.x,minY:p.y,maxX:p.x,maxY:p.y};else{displayBounds.minX=Math.min(displayBounds.minX,p.x);displayBounds.minY=Math.min(displayBounds.minY,p.y);displayBounds.maxX=Math.max(displayBounds.maxX,p.x);displayBounds.maxY=Math.max(displayBounds.maxY,p.y);}}let d=points.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ');if(path.closed)d+=' Z';const el=document.createElementNS('http://www.w3.org/2000/svg','path');el.setAttribute('d',d);el.setAttribute('class','drawing-line');frag.append(el);}pathsGroup.replaceChildren(frag);updateDrawingSelection(displayBounds);drawingInteraction.removeAttribute('transform');
+  const result=await importSvg(selectedSvg,options);if(version!==drawingVersion)return;drawingImport=null;preparedDrawing=result;$('drawing-step-state').textContent=`${result.paths.length} paths`;
+  let displayBounds=null;const drawingParts=[];for(const path of result.paths){const points=geometry.frame&&geometry.mode==='machine'?path.points.map(point=>mapMachineToEnvelope(mapPointToMachine(point,geometry.machine),geometry.machine)):path.points;for(const p of points){if(!displayBounds)displayBounds={minX:p.x,minY:p.y,maxX:p.x,maxY:p.y};else{displayBounds.minX=Math.min(displayBounds.minX,p.x);displayBounds.minY=Math.min(displayBounds.minY,p.y);displayBounds.maxX=Math.max(displayBounds.maxX,p.x);displayBounds.maxY=Math.max(displayBounds.maxY,p.y);}}let d=points.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ');if(path.closed)d+=' Z';drawingParts.push(d);}if(drawingParts.length){const el=document.createElementNS('http://www.w3.org/2000/svg','path');el.setAttribute('d',drawingParts.join(' '));el.setAttribute('class','drawing-line');pathsGroup.replaceChildren(el);}else pathsGroup.replaceChildren();updateDrawingSelection(displayBounds);drawingInteraction.removeAttribute('transform');
   const b=result.bounds,w=b?b.maxX-b.minX:0,h=b?b.maxY-b.minY:0;
   $('drawing-status').textContent=`${selectedSvg.name} · ${result.paths.length} paths · ${geometryLabel}${result.outOfBounds?' · OUTSIDE BOUNDS':''}`;
   $('drawing-status').classList.toggle('drawing-error',result.outOfBounds);$('drawing-preview').classList.toggle('out-of-bounds',result.outOfBounds);
   $('drawing-metrics').textContent=`${w.toFixed(1)} × ${h.toFixed(1)} mm · draw ${result.drawLength.toFixed(0)} mm · pen-up from origin ${result.penUpLength.toFixed(0)} mm · ${result.segmentCount} segments`;
   const pageFit=plotter.machine.page?.frame?.closureError;
   $('drawing-warnings').textContent=result.warnings.join(' ')+(result.outOfBounds?' Drawing extends beyond the area; reduce scale or adjust offsets.':'')+(pageFit>3?` Page corners disagree by ${pageFit.toFixed(1)} mm; recalibrate before plotting.`:'');updatePlotControls();
- }catch(error){if(version!==drawingVersion)return;preparedDrawing=null;drawingInteraction.removeAttribute('transform');$('drawing-status').textContent=error.message;$('drawing-status').classList.add('drawing-error');preview.classList.remove('out-of-bounds');$('drawing-metrics').textContent='';$('drawing-warnings').textContent='';pathsGroup.replaceChildren();updateDrawingSelection(null);}
+ }catch(error){if(version!==drawingVersion)return;drawingImport=null;preparedDrawing=null;drawingInteraction.removeAttribute('transform');$('drawing-status').textContent=error.message;$('drawing-status').classList.add('drawing-error');preview.classList.remove('out-of-bounds');$('drawing-metrics').textContent='';$('drawing-warnings').textContent='';pathsGroup.replaceChildren();updateDrawingSelection(null);}
 }
-function svgPoint(event){const svg=$('drawing-preview'),point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;return point.matrixTransform(svg.getScreenCTM().inverse());}
+function svgPoint(event){const svg=$('drawing-preview'),point=svg.createSVGPoint();point.x=event.clientX;point.y=event.clientY;const p=point.matrixTransform(svg.getScreenCTM().inverse());if(!previewRotation)return p;const {x:cx,y:cy}=previewCenter;return{x:p.y-cy+cx,y:cx+cy-p.x};}
 function areaToPreview(point,geometry){return geometry.frame&&geometry.mode==='machine'?mapMachineToEnvelope(mapPointToMachine(point,geometry.machine),geometry.machine):point;}
 function previewToArea(point,geometry){
  const origin=areaToPreview({x:0,y:0},geometry),unitX=areaToPreview({x:1,y:0},geometry),unitY=areaToPreview({x:0,y:1},geometry),ax=unitX.x-origin.x,ay=unitX.y-origin.y,bx=unitY.x-origin.x,by=unitY.y-origin.y,det=ax*by-ay*bx,dx=point.x-origin.x,dy=point.y-origin.y;
@@ -192,6 +196,7 @@ $('drawing-preview').addEventListener('pointercancel',event=>endDrawingDrag(even
 document.addEventListener('pointerdown',event=>{if(drawingSelected&&!$('drawing-preview').contains(event.target)){drawingSelected=false;drawingSelection.classList.remove('selected');}});
 $('view-machine').onclick=()=>{previewMode='machine';renderDrawing();};
 $('view-page').onclick=()=>{if(!plotter.machine.page?.frame)return;previewMode='page';renderDrawing();};
+$('preview-rotate').onclick=()=>{previewRotation=previewRotation?0:90;renderPreviewGeometry(previewGeometry());};
 function updatePreviewPen(){
  const color=$('preview-pen-color').value,width=$('preview-pen-width').valueAsNumber;
  if(CSS.supports('color',color))$('drawing-preview').style.setProperty('--preview-pen-color',color);
@@ -203,8 +208,7 @@ updatePreviewPen();
 svgInput.onchange=async()=>{
  drawingSelected=false;drawingSelection.classList.remove('selected');selectedSvg=null;const file=svgInput.files?.[0];if(!file){$('drawing-step-state').textContent='Choose SVG';svgStatus.textContent='';renderDrawing();return;}
  if(file.size>5*1024*1024){svgInput.value='';svgStatus.textContent='SVG files must be 5 MB or smaller.';renderDrawing();return;}
- try{const source=await file.text(),doc=new DOMParser().parseFromString(source,'image/svg+xml');if(doc.querySelector('parsererror')||doc.documentElement.localName.toLowerCase()!=='svg')throw Error('Invalid SVG file');selectedSvg=file;$('svg-options').hidden=false;svgStatus.textContent=`${file.name} · ${(file.size/1024).toFixed(1)} KB`;$('drawing-step-state').textContent='Preparing';await renderDrawing();}
- catch(error){svgInput.value='';svgStatus.textContent=error.message;renderDrawing();}
+ selectedSvg=file;$('svg-options').hidden=false;svgStatus.textContent=`${file.name} · ${(file.size/1024).toFixed(1)} KB`;$('drawing-step-state').textContent='Preparing';await renderDrawing();
 };
 $('rebuild-svg').onclick=()=>renderDrawing();
 ['curve-tolerance','simplify-tolerance','sort-paths','drawing-scale','drawing-offset-x','drawing-offset-y'].forEach(id=>$(id).addEventListener('change',renderDrawing));
