@@ -4,6 +4,39 @@ const CONTAINERS=new Set(['g','a','switch']);
 const ATTRS=new Set(['d','points','x','y','x1','y1','x2','y2','width','height','rx','ry','r','cx','cy','transform','viewBox','preserveAspectRatio']);
 const PRESENTATION=new Set(['fill','fill-rule','fill-opacity','stroke','stroke-width','stroke-linecap','stroke-linejoin','stroke-miterlimit','stroke-opacity','stroke-dasharray','stroke-dashoffset','opacity','display','visibility','color','vector-effect']);
 
+// SVG paths may contain many independent strokes, each beginning with M/m.
+// Keep those strokes separate so flattening never draws a connector between them.
+export function splitPathSubpaths(d){
+  const tokens=[...d.matchAll(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g)].map(m=>({value:m[0],start:m.index,end:m.index+m[0].length,command:/^[a-zA-Z]$/.test(m[0])}));
+  const arity={M:2,L:2,H:1,V:1,C:6,S:4,Q:4,T:2,A:7};let cmd=null,commandStart=0,x=0,y=0,sx=0,sy=0,record=null;const records=[];
+  const finish=end=>{if(record){record.end=end;records.push(record);record=null;}};
+  let i=0;
+  while(i<tokens.length){if(tokens[i].command){commandStart=tokens[i].start;cmd=tokens[i++].value; if(cmd.toUpperCase()==='Z'){x=sx;y=sy;cmd=null;}continue;}if(!cmd)break;
+    const upper=cmd.toUpperCase(),relative=cmd!==upper,n=arity[upper];if(!n)break;
+    if(upper==='M'){
+      const first=tokens[i],second=tokens[i+1];if(!first||!second||first.command||second.command)break;
+      finish(commandStart);const nx=Number(first.value),ny=Number(second.value);x=relative?x+nx:nx;y=relative?y+ny:ny;sx=x;sy=y;
+      record={start:commandStart,first,second,x,y,relative,end:d.length};i+=2;
+      // Additional coordinate pairs after moveto are implicit lineto groups.
+      cmd=relative?'l':'L';continue;
+    }
+    if(i+n>tokens.length||tokens.slice(i,i+n).some(t=>t.command))break;
+    const values=tokens.slice(i,i+n).map(t=>Number(t.value));
+    if(upper==='H')x=relative?x+values[0]:values[0];
+    else if(upper==='V')y=relative?y+values[0]:values[0];
+    else {const ex=values[n-2],ey=values[n-1];x=relative?x+ex:ex;y=relative?y+ey:ey;}
+    i+=n;
+  }
+  finish(d.length);if(records.length<=1)return[d];
+  return records.map(r=>{
+    let chunk=d.slice(r.start,r.end);if(r.relative){
+      const offset=r.start,edits=[[r.first.start-offset,r.first.end-offset,String(r.x)],[r.second.start-offset,r.second.end-offset,String(r.y)]];
+      for(const [a,b,value] of edits.reverse())chunk=chunk.slice(0,a)+value+chunk.slice(b);
+    }
+    return chunk;
+  });
+}
+
 function safeInlineStyle(value){
   return value.split(';').flatMap(part=>{const i=part.indexOf(':');if(i<0)return[];const key=part.slice(0,i).trim().toLowerCase(),val=part.slice(i+1).trim();return PRESENTATION.has(key)&&!/[<>]|url\s*\(|expression\s*\(/i.test(val)?[[key,val]]:[];});
 }
@@ -12,9 +45,12 @@ function copySafeElement(node,stats){
   if(node.hasAttribute('clip-path')||node.hasAttribute('mask')){stats.clipping=true;stats.ignored++;return null;}
   if(!GEOMETRY.has(name)&&!CONTAINERS.has(name)){if(name!=='defs'&&name!=='title'&&name!=='desc'&&name!=='metadata'&&name!=='style')stats.ignored++;if(name==='style')stats.css=true;return null;}
   if(node.hasAttribute('class')||node.hasAttribute('className'))stats.css=true;
-  const clone=document.createElementNS(NS,name);
-  for(const attr of node.attributes){const key=attr.name,value=attr.value;if(ATTRS.has(key)||PRESENTATION.has(key)){if(!/[<>]|url\s*\(|expression\s*\(/i.test(value))clone.setAttribute(key,value);}}
-  if(node.hasAttribute('style')){const declarations=safeInlineStyle(node.getAttribute('style'));if(declarations.length)clone.setAttribute('style',declarations.map(([k,v])=>`${k}:${v}`).join(';'));}
+  const makeClone=dOverride=>{const clone=document.createElementNS(NS,name);for(const attr of node.attributes){const key=attr.name,value=key==='d'&&dOverride!==undefined?dOverride:attr.value;if(ATTRS.has(key)||PRESENTATION.has(key)){if(!/[<>]|url\s*\(|expression\s*\(/i.test(value))clone.setAttribute(key,value);}}if(node.hasAttribute('style')){const declarations=safeInlineStyle(node.getAttribute('style'));if(declarations.length)clone.setAttribute('style',declarations.map(([k,v])=>`${k}:${v}`).join(';'));}return clone;};
+  if(name==='path'){
+    const subpaths=splitPathSubpaths(node.getAttribute('d')||'');
+    if(subpaths.length>1){const wrapper=document.createElementNS(NS,'g');for(const d of subpaths){wrapper.append(makeClone(d));stats.geometry++;}return wrapper;}
+  }
+  const clone=makeClone();
   if(CONTAINERS.has(name))for(const child of node.children){const safe=copySafeElement(child,stats);if(safe)clone.append(safe);}
   else stats.geometry++;
   return clone;

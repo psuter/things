@@ -112,7 +112,9 @@ export class Plotter extends EventTarget {
   }
   commandAllowedWhileLocked(command){
     const c=command.trim();
-    return ['?','!','~','\x18','$$','$I','$G','$#','$N','G90','G21','M3 S15','M3 S80','G4 P0.1','G4 P0.2'].includes(c);
+    if(['?','!','~','\x18','$$','$I','$G','$#','$N','G90','G21'].includes(c))return true;
+    const servo=c.match(/^M3 S(\d{1,4})$/),dwell=c.match(/^G4 P(\d+(?:\.\d*)?|\.\d+)$/);
+    return !!servo&&Number(servo[1])<=1000||!!dwell&&Number(dwell[1])<=30;
   }
   async clearEnvelope(){this.machine={homed:this.machine.homed,home:this.machine.home,envelope:null};this.saveMachine();}
   abort(reason){if(this.pending)this.finish(reason);}
@@ -128,11 +130,12 @@ export class Plotter extends EventTarget {
     const summary=JSON.stringify({inputSignals:signals,rxBytes:this.rxBytes,txBytes:this.txBytes,pending:this.pending!==null,partialRx:this.buffer});
     this.log('diagnostic',summary);return [summary];
   }
-  async jog(axis,distance){
+  async jog(axis,distance,{penDown=false,feed=3000}={}){
     if(!this.connected || this.fault || this.held)throw Error('Plotter is not ready to jog');
     if(this.machine.envelope && !this.machine.homed && !this.machine.invalidated)throw Error('Motion lock: GRBL restarted, so manual home is unknown. Invalidate the lock, set home at the corner where the head is now (or jog to a known corner), then capture the opposite corner.');
     if(this.busy || this.pending)throw Error('Wait for the current command before jogging');
     if(!['X','Y'].includes(axis) || ![-100,-50,-10,-1,1,10,50,100].includes(distance))throw Error('Unsupported jog');
+    if(penDown&&(!Number.isFinite(feed)||feed<1||feed>10000))throw Error('Invalid pen-down jog speed');
     this.busy=true;this.state();
     try {
       const position=await this.getPosition();
@@ -144,10 +147,9 @@ export class Plotter extends EventTarget {
         const limit=axis==='X'?env.width:env.height;
         if(coord < -0.05 || coord > limit+0.05 || target < -0.05 || target > limit+0.05)throw Error(`Jog would leave recorded machine bounds (0–${limit.toFixed(1)} mm)`);
       }
-      await this.command('M3 S15',100000,true);
-      await new Promise(r=>setTimeout(r,150));
-      await this.command(`G91 G0 ${axis}${distance}`,100000,true);
-      this.log('system',`Jogged ${axis} ${distance>0?'+':''}${distance} mm (relative).`);
+      if(!penDown){await this.command('M3 S15',100000,true);await new Promise(r=>setTimeout(r,150));}
+      await this.command(`G91 G${penDown?'1':'0'} ${axis}${distance}${penDown?` F${feed}`:''}`,100000,true);
+      this.log('system',`Jogged ${axis} ${distance>0?'+':''}${distance} mm (relative${penDown?', pen down':''}).`);
     } finally {
       // Restore absolute positioning even when the move returns a GRBL error.
       try {await this.command('G90',100000,true);} finally {this.busy=false;this.state();}
