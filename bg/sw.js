@@ -29,6 +29,14 @@ self.addEventListener("install", (event) =>
         const code = await (await fetch(script)).text();
         // Quoted with ', " or ` (Vite emits template strings).
         for (const m of code.matchAll(/["'`]([\w./-]+\.wasm)["'`]/g)) wasm.push(new URL(m[1], script).href);
+        // Workers (the match analysis) are separate scripts named in the
+        // main one, with their own copy of the engine's loader.
+        for (const m of code.matchAll(/["'`]([\w.-]+-worker-[\w-]+\.js)["'`]/g)) {
+          const worker = new URL(m[1], script).href;
+          wasm.push(worker);
+          const workerCode = await (await fetch(worker)).text();
+          for (const w of workerCode.matchAll(/["'`]([\w./-]+\.wasm)["'`]/g)) wasm.push(new URL(w[1], worker).href);
+        }
       }
 
       await cache.put(BASE, page);
@@ -55,13 +63,15 @@ async function networkFirst(request, key) {
     if (response.ok) await cache.put(key, response.clone());
     return response;
   } catch {
-    return (await cache.match(key)) ?? Response.error();
+    return (await cache.match(key, { ignoreVary: true })) ?? Response.error();
   }
 }
 
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE);
-  const hit = await cache.match(request);
+  // Ignore Vary: scripts are requested with an Origin header (modules,
+  // workers) but were cached at install without one.
+  const hit = await cache.match(request, { ignoreVary: true });
   if (hit) return hit;
   const response = await fetch(request);
   if (response.ok) await cache.put(request, response.clone());
