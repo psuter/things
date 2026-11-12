@@ -1,0 +1,11 @@
+{
+  "name": "Backgammon",
+  "short_name": "Backgammon",
+  "description": "Play backgammon against a neural network, in your browser.",
+  "theme_color": "#2f5d4a",
+  "background_color": "#f4f1ea",
+  "display": "standalone",
+  "start_url": "./",
+  "scope": "./",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
